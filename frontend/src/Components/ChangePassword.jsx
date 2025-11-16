@@ -112,19 +112,19 @@ export default function ChangePassword({ isOpen, onClose, onChanged, userId }) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 flex items-center justify-center z-80"
+            className="fixed inset-0 flex items-center justify-center z-80 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
 
-            <div className="relative bg-white rounded-lg drop-shadow-card max-w-[40rem] w-full min-h-[20rem] z-10 overflow-hidden flex flex-col">
-              <div className="w-full p-5 drop-shadow-base bg-gray-100">
-                <h2 className="header-sub text-xl font-bold">Change Password</h2>
+            <div className="relative bg-white rounded-lg drop-shadow-card max-w-[30rem] w-full max-h-[90vh] z-10 overflow-hidden flex flex-col">
+              <div className="w-full p-4 drop-shadow-base bg-gray-100">
+                <h2 className="header-sub text-lg font-bold">Change Password</h2>
               </div>
 
-              <div className="flex flex-col gap-5 flex-1 p-10">
+              <div className="flex flex-col gap-4 flex-1 p-6">
                 <div className="flex flex-col gap-2 w-full">
                   <p className="font-bold-label">New Password</p>
                   <input
@@ -149,7 +149,7 @@ export default function ChangePassword({ isOpen, onClose, onChanged, userId }) {
                   />
                 </div>
 
-                <div className="flex justify-end gap-4 mt-8">
+                <div className="flex justify-end gap-3 mt-4">
                   <button className="btn-outline font-bold-label" onClick={onClose}>
                     Cancel
                   </button>

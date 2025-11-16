@@ -26,11 +26,29 @@ function HomeSDW() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [projectLocation, setProjectLocation] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   const [loadingStage, setLoadingStage] = useState(0);
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
 
+  const isMobile = windowWidth <= 700;
+  const isVerySmall = windowWidth <= 400;
+  const isSmallLayout = windowWidth <= 700; // Changed from 900 to 700
+  const shortenTitle = windowWidth <= 500;
+  const moveNewCaseToNewRow = windowWidth <= 400;
+  const hideCHColumn = windowWidth <= 800;
+  const hideSDWColumn = windowWidth <= 380;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -84,12 +102,16 @@ function HomeSDW() {
 
   useEffect(() => {
     if (!user) return;
+    
+    const spuFromData = clients.length > 0 ? clients[0].spu : null;
+    const displaySpu = user.spu_name || spuFromData;
+    
     const title =
       user.role === "head"
         ? "Sponsored Member Cases"
-        : `Sponsored Member Cases - ${user.spu_name}`;
+        : (displaySpu || "Sponsored Member Cases");
     document.title = title;
-  }, [user]);
+  }, [user, clients]);
 
   const getFilteredClients = () => {
     let filtered = [...clients].filter((c) => c.is_active);
@@ -134,39 +156,72 @@ function HomeSDW() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-50 w-full max-w-[1280px] mx-auto flex justify-between items-center py-5 px-8 bg-white">
-        <a href="/" className="main-logo main-logo-text-nav">
-          <div className="main-logo-setup folder-logo"></div>
-          <div className="flex flex-col">
-            <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila Foundation Inc.</p>
-            <p className="main-logo-text-nav">Case Management System</p>
-          </div>
-        </a>
+      <div className="fixed top-0 left-0 right-0 z-60 w-full max-w-[1280px] mx-auto flex justify-between items-center py-5 px-8 bg-white">
+        <div className="flex items-center gap-4">
+          {isMobile && (
+            <button
+              className="side-icon-setup menu-button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+            </button>
+          )}
 
-        <div className="flex gap-5 items-center bg-purple-100 rounded-full px-8 py-4 w-full max-w-[40rem] font-label">
-          <div className="nav-search"></div>
-          <input
-            type="text"
-            placeholder="Search"
-            className="focus:outline-none flex-1"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <a href="/" className="main-logo main-logo-text-nav">
+            <div className="main-logo-setup folder-logo"></div>
+            <div className="flex flex-col">
+              {isVerySmall ? (
+                <>
+                  <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila</p>
+                  <p className="main-logo-text-nav">CMS</p>
+                </>
+              ) : (
+                <>
+                  <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila Foundation Inc.</p>
+                  <p className="main-logo-text-nav">Case Management System</p>
+                </>
+              )}
+            </div>
+          </a>
         </div>
+
+        {!isMobile && (
+          <div className="flex gap-5 items-center bg-purple-100 rounded-full px-8 py-4 w-full max-w-[40rem] font-label">
+            <div className="nav-search"></div>
+            <input
+              type="text"
+              placeholder="Search"
+              className="focus:outline-none flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       <main className="min-h-[calc(100vh-4rem)] w-full flex mt-[9rem]">
-        <SideBar user={user} />
+        <SideBar 
+          user={user} 
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isMobile={isMobile}
+        />
 
-        <div className="flex flex-col w-full gap-15 ml-[15rem]">
+        <div className={`flex flex-col w-full gap-8 ${isMobile ? 'ml-0' : 'ml-[15rem]'} px-8`}>
           <h1 className="header-main">
             {user?.role === "head"
               ? "Sponsored Member Cases"
-              : `Sponsored Member Cases${user?.spu_name ? ` - ${user.spu_name}` : ""}`}
+              : (() => {
+                  const spuFromData = clients.length > 0 ? clients[0].spu : null;
+                  const displaySpu = user?.spu_name || spuFromData;
+                  
+                  return shortenTitle
+                    ? (displaySpu || "Sponsored Member Cases")
+                    : `Sponsored Member Cases${displaySpu ? ` - ${displaySpu}` : ""}`;
+                })()}
           </h1>
 
-          <div className="flex justify-between gap-10">
-            <div className="flex gap-5 justify-between items-center w-full">
+          <div className={`flex ${isSmallLayout ? 'flex-col' : 'justify-between'} gap-10`}>
+            <div className={`flex gap-5 ${isSmallLayout ? 'justify-between items-center w-full' : 'justify-between items-center w-full'}`}>
               <div className="flex gap-5 w-full">
                 {user?.role === "head" && (
                   <select
@@ -183,6 +238,44 @@ function HomeSDW() {
                   </select>
                 )}
 
+                {!isSmallLayout && (
+                  <>
+                    <select
+                      className="text-input font-label max-w-[20rem]"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                    >
+                      <option value="">Sort By</option>
+                      <option value="name">Name</option>
+                      <option value="sm_number">CH Number</option>
+                      <option value="pend_term">Pending Termination</option>
+                    </select>
+
+                    <button
+                      className="btn-outline font-bold-label"
+                      onClick={() =>
+                        setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
+                      }
+                    >
+                      <div className="icon-static-setup order-button"></div>
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {user?.role === "sdw" && !isSmallLayout && !moveNewCaseToNewRow && (
+                <button
+                  onClick={() => navigate("/create-case")}
+                  className="btn-outline font-bold-label flex gap-4 whitespace-nowrap"
+                >
+                  <p>+</p>
+                  <p>New Case</p>
+                </button>
+              )}
+            </div>
+
+            {isSmallLayout && (
+              <div className="flex gap-5 w-full">
                 <select
                   className="text-input font-label max-w-[20rem]"
                   value={sortBy}
@@ -202,9 +295,21 @@ function HomeSDW() {
                 >
                   <div className="icon-static-setup order-button"></div>
                 </button>
-              </div>
 
-              {user?.role === "sdw" && (
+                {user?.role === "sdw" && !moveNewCaseToNewRow && (
+                  <button
+                    onClick={() => navigate("/create-case")}
+                    className="btn-outline font-bold-label flex gap-4 whitespace-nowrap"
+                  >
+                    <p>+</p>
+                    <p>New Case</p>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {user?.role === "sdw" && moveNewCaseToNewRow && (
+              <div className="flex justify-center w-full">
                 <button
                   onClick={() => navigate("/create-case")}
                   className="btn-outline font-bold-label flex gap-4 whitespace-nowrap"
@@ -212,15 +317,28 @@ function HomeSDW() {
                   <p>+</p>
                   <p>New Case</p>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
+          {isMobile && (
+            <div className="flex gap-5 items-center bg-purple-100 rounded-full px-8 py-4 w-full font-label">
+              <div className="nav-search"></div>
+              <input
+                type="text"
+                placeholder="Search"
+                className="focus:outline-none flex-1"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="flex flex-col w-full gap-3">
-            <div className="grid grid-cols-[2fr_1fr_2fr] items-center border-b border-gray-400 pb-2 mb-2">
+            <div className={`${hideSDWColumn ? 'grid grid-cols-[1fr]' : hideCHColumn ? 'grid grid-cols-[2fr_2fr]' : 'grid grid-cols-[2fr_1fr_2fr]'} items-center border-b border-gray-400 pb-2 mb-2`}>
               <p className="font-bold-label ml-[20%]">Name</p>
-              <p className="font-bold-label text-center">CH Number</p>
-              <p className="font-bold-label text-center">SDW Assigned</p>
+              {!hideCHColumn && !hideSDWColumn && <p className="font-bold-label text-center">CH Number</p>}
+              {!hideSDWColumn && <p className="font-bold-label text-center">SDW Assigned</p>}
             </div>
 
             {user?.role === "head" && currentSPU === "" ? (
@@ -239,6 +357,8 @@ function HomeSDW() {
                   name={client.name}
                   assigned_sdw_name={client.assigned_sdw_name}
                   pendingTermination={client.pendingTermination ?? false}
+                  hideCHColumn={hideCHColumn}
+                  hideSDWColumn={hideSDWColumn}
                 />
               ))
             )}

@@ -85,7 +85,7 @@ const deleteAccount = async (req, res) => {
      await sessionCollection.deleteMany({
      "session.user._id": account_selected._id.toString()
      });
-     console.log(`Sessions deleted for user ${account_selected._id}`);
+     // console.log(`Sessions deleted for user ${account_selected._id}`);
      } catch (error) {
      console.error("Error deleting sessions:", error);
      }

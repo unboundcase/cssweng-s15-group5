@@ -1,72 +1,230 @@
 .header-main {
-    @apply font-sans font-semibold text-[3.2rem];
-    color: var(--color-black);
-}
-
-.header-sub {
     @apply font-sans font-semibold text-[2.4rem];
     color: var(--color-black);
 }
 
-.header-plain {
-    @apply font-sans text-[2.4rem];
+/* Small mobile and up */
+@media (min-width: 480px) {
+    .header-main {
+        @apply text-[2.8rem];
+    }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+    .header-main {
+        @apply text-[3.2rem];
+    }
+}
+
+.header-sub {
+    @apply font-sans font-semibold text-[2.0rem];
     color: var(--color-black);
+}
+
+@media (min-width: 480px) {
+    .header-sub {
+        @apply text-[2.2rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-sub {
+        @apply text-[2.4rem];
+    }
+}
+
+.header-plain {
+    @apply font-sans text-[2.0rem];
+    color: var(--color-black);
+}
+
+@media (min-width: 480px) {
+    .header-plain {
+        @apply text-[2.2rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-plain {
+        @apply text-[2.4rem];
+    }
 }
 
 .header-xl {
-    @apply font-sans font-semibold text-[7.2rem];
+    @apply font-sans font-semibold text-[4.8rem];
+}
+
+@media (min-width: 480px) {
+    .header-xl {
+        @apply text-[6.0rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-xl {
+        @apply text-[7.2rem];
+    }
 }
 
 .header-lg {
-    @apply font-sans font-semibold text-[4.0rem];
+    @apply font-sans font-semibold text-[3.0rem];
+}
+
+@media (min-width: 480px) {
+    .header-lg {
+        @apply text-[3.5rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-lg {
+        @apply text-[4.0rem];
+    }
 }
 
 .header-md {
-    @apply font-sans font-semibold text-[3.2rem];
+    @apply font-sans font-semibold text-[2.4rem];
+}
+
+@media (min-width: 480px) {
+    .header-md {
+        @apply text-[2.8rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-md {
+        @apply text-[3.2rem];
+    }
 }
 
 .header-sm {
-    @apply font-sans font-medium text-[2.4rem];
+    @apply font-sans font-medium text-[2.0rem];
+}
+
+@media (min-width: 480px) {
+    .header-sm {
+        @apply text-[2.2rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .header-sm {
+        @apply text-[2.4rem];
+    }
 }
 
 .label-lg {
-    @apply font-sans font-semibold text-[2.0rem];
+    @apply font-sans font-semibold text-[1.6rem];
+}
+
+@media (min-width: 480px) {
+    .label-lg {
+        @apply text-[1.8rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .label-lg {
+        @apply text-[2.0rem];
+    }
 }
 
 .label-base {
-    @apply font-sans font-semibold text-[1.6rem];
-}
-
-.label-md {
     @apply font-sans font-semibold text-[1.4rem];
 }
 
-.label-sm {
+@media (min-width: 1024px) {
+    .label-base {
+        @apply text-[1.6rem];
+    }
+}
+
+.label-md {
     @apply font-sans font-semibold text-[1.2rem];
 }
 
-.body-lg {
-    @apply font-sans font-normal text-[2.0rem];
+@media (min-width: 1024px) {
+    .label-md {
+        @apply text-[1.4rem];
+    }
 }
 
-.body-base {
+.label-sm {
+    @apply font-sans font-semibold text-[1.0rem];
+}
+
+@media (min-width: 1024px) {
+    .label-sm {
+        @apply text-[1.2rem];
+    }
+}
+
+.body-lg {
     @apply font-sans font-normal text-[1.6rem];
 }
 
-.body-md {
+@media (min-width: 480px) {
+    .body-lg {
+        @apply text-[1.8rem];
+    }
+}
+
+@media (min-width: 1024px) {
+    .body-lg {
+        @apply text-[2.0rem];
+    }
+}
+
+.body-base {
     @apply font-sans font-normal text-[1.4rem];
 }
 
-.body-sm {
+@media (min-width: 1024px) {
+    .body-base {
+        @apply text-[1.6rem];
+    }
+}
+
+.body-md {
     @apply font-sans font-normal text-[1.2rem];
 }
 
+@media (min-width: 1024px) {
+    .body-md {
+        @apply text-[1.4rem];
+    }
+}
+
+.body-sm {
+    @apply font-sans font-normal text-[1.0rem];
+}
+
+@media (min-width: 1024px) {
+    .body-sm {
+        @apply text-[1.2rem];
+    }
+}
+
 .font-bold-label {
-    @apply font-sans font-semibold text-[1.6rem];
+    @apply font-sans font-semibold text-[1.4rem];
     color: var(--color-black);
 }
 
+@media (min-width: 1024px) {
+    .font-bold-label {
+        @apply text-[1.6rem];
+    }
+}
+
 .font-label {
-    @apply font-sans text-[1.6rem];
+    @apply font-sans text-[1.4rem];
     color: var(--color-black);
+}
+
+@media (min-width: 1024px) {
+    .font-label {
+        @apply text-[1.6rem];
+    }
 }

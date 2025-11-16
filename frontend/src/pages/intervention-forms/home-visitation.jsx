@@ -25,16 +25,12 @@ function useQuery() {
 }
 
 function HomeVisitationForm() {
-
     // ===== START :: Setting Data ===== //
 
     const query = useQuery();
     const action = query.get('action') || "";
     const caseID = query.get('caseID') || "";
     const formID = query.get('formID') || "";
-
-    // console.log("Home Visit");
-    // console.log("Home Visit Case ID: ", caseID);
 
     const [loading, setLoading] = useState(true);
     const [rawCaseData, setRawCaseData] = useState(null);
@@ -85,10 +81,21 @@ function HomeVisitationForm() {
 
     const [familyMembers, setFamilyMembers] = useState([]);
 
+    // ⬇️ windowWidth for responsive behavior (≤800px stacks to 1 column)
+    const [windowWidth, setWindowWidth] = useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+    useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
+
     // < START :: Auto-Filled Data > //
 
     const viewForm = action !== 'create' ? true : false;
 
+    const navigate = useNavigate();
 
     useEffect(() => {
         setLoadingStage(0);
@@ -283,92 +290,13 @@ function HomeVisitationForm() {
 
     // ===== START :: Backend Connection ===== //
 
-    // < START :: Create Form > //
-
     const [errors, setErrors] = useState({});
-
-    // const validateForm = () => {
-    //     const newErrors = {};
-
-    //     const requiredFields = {
-    //         grade_year_course,
-    //         years_in_program,
-
-    //         date,
-    //         community,
-    //         sponsor_name,
-
-    //         family_type,
-
-    //         sm_progress,
-    //         family_progress,
-
-    //         observation_findings,
-    //         interventions,
-
-    //         recommendations,
-    //         agreement,
-    //     };
-
-    //     Object.entries(requiredFields).forEach(([field, value]) => {
-
-    //         if (
-    //             value === undefined ||               
-    //             value === null ||                    
-    //             value === "" ||                    
-    //             (typeof value === "string" && !value.trim())
-    //         ) {
-    //         newErrors[field] = "Missing input";
-    //         }
-    //     });
-
-    //     if (isNaN(Number(years_in_program))) {
-    //         newErrors['years_in_program'] = "Input should be a number";
-    //     }
-
-    //     setErrors(newErrors);
-
-    //     return Object.keys(newErrors).length === 0; 
-    // };
 
     const formatListWithAnd = (items) => {
         if (items.length === 1) return items[0];
         if (items.length === 2) return `${items[0]} and ${items[1]}`;
         return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
     };
-
-
-    /*const validateForm = () => {
-        const missing = [];
-
-        if (!grade_year_course || grade_year_course.trim() === "") missing.push("Grade/Year Course");
-        if (!years_in_program || years_in_program.trim() === "") missing.push("Year/s in the Program");
-        if (!date || date.trim() === "") missing.push("Date");
-        if (!community || community.trim() === "") missing.push("Community");
-        if (!sponsor_name || sponsor_name.trim() === "") missing.push("Sponsor Name");
-        if (!family_type || family_type.trim() === "") missing.push("Family Type");
-        if (!sm_progress || sm_progress.trim() === "") missing.push("SM Progress");
-        if (!family_progress || family_progress.trim() === "") missing.push("Family Progress");
-        if (!observation_findings || observation_findings.trim() === "") missing.push("Worker's Observation/Findings");
-        if (!interventions || interventions.trim() === "") missing.push("Interventions Made");
-        if (!recommendations || recommendations.trim() === "") missing.push("Recommendations");
-        if (!agreement || agreement.trim() === "") missing.push("Agreement");
-
-        if (isNaN(Number(years_in_program))) {
-            missing.push("Year/s in the Program (must be a number)");
-        }
-
-        if (missing.length > 0) {
-            setModalTitle("Missing / Invalid Fields");
-            setModalBody(`The following fields are missing or invalid: ${formatListWithAnd(missing)}`);
-            setModalImageCenter(<div className="warning-icon mx-auto" />);
-            setModalConfirm(false);
-            setShowModal(true);
-            return false;
-        }
-
-        return true;
-    };*/
 
     const validateForm = () => {
         const fieldErrors = {};
@@ -392,7 +320,6 @@ function HomeVisitationForm() {
 
             const fieldNames = Object.values(fieldErrors);
             setModalTitle("Missing / Invalid Fields");
-            // setModalBody(`The following fields are missing or invalid: ${formatListWithAnd(fieldNames)}`);
             setModalBody(
                 <>
                     <p className="font-medium text-gray-700 mb-2">
@@ -421,61 +348,6 @@ function HomeVisitationForm() {
         return true;
     };
 
-    // const handleSubmit = async (e) => {
-    //     e?.preventDefault();
-    //     const isValid = validateForm();
-
-    //     if (!isValid) {
-    //         // window.scrollTo({ top: 0, behavior: "smooth" });
-    //         return false;
-    //     };
-
-    //     try {
-    //         console.log("Form Submitted");
-    //         const created = await handleCreate();
-    //         return created;
-    //     } catch (err) {
-    //         console.error("Submission failed:", err);
-    //         return false;
-    //     }
-
-    // };
-
-    // const handleSubmit = async (e) => {
-    //     e?.preventDefault();
-
-    //     const isValid = validateForm();
-    //     if (!isValid) return false; // Modal already shows missing fields
-
-    //     setIsProcessing(true);
-
-    //     try {
-    //         const created = await handleCreate(); // perform actual save
-    //         if (created) {
-    //             setShowSuccessModal(true);
-    //             return true;
-    //         } else {
-    //             // If something failed silently
-    //             setModalTitle("Submission Failed");
-    //             setModalBody("Something went wrong while creating the intervention form.");
-    //             setModalImageCenter(<div className="warning-icon mx-auto" />);
-    //             setModalConfirm(false);
-    //             setShowModal(true);
-    //             return false;
-    //         }
-    //     } catch (err) {
-    //         console.error("Submission failed:", err);
-    //         setModalTitle("Unexpected Error");
-    //         setModalBody("An unexpected error occurred while submitting the form.");
-    //         setModalImageCenter(<div className="warning-icon mx-auto" />);
-    //         setModalConfirm(false);
-    //         setShowModal(true);
-    //         return false;
-    //     } finally {
-    //         setIsProcessing(false);
-    //     }
-    // };
-
     const handleSubmit = async (e) => {
         e?.preventDefault();
 
@@ -491,7 +363,7 @@ function HomeVisitationForm() {
 
         setModalTitle("Confirm Creation");
         setModalBody("Are you sure you want to save this Home Visitation Form? This cannot be edited or deleted after creation.");
-        setModalImageCenter(<div className="info-icon mx-auto" />);
+        setModalImageCenter(<div className="warning-icon mx-auto" />);
         setModalConfirm(true);
         setModalOnConfirm(() => async () => {
             setShowModal(false);
@@ -527,10 +399,7 @@ function HomeVisitationForm() {
         setShowModal(true);
     };
 
-
-
     const handleCreate = async () => {
-
         const payload = {
             form_num,
             first_name,
@@ -570,7 +439,6 @@ function HomeVisitationForm() {
             observation_findings,
             interventions,
         };
-        // console.log("Payload: ", payload);
 
         const response = await createHomeVis(payload, caseID);
         if (response?.form?._id) {
@@ -580,10 +448,6 @@ function HomeVisitationForm() {
             return false;
         }
     };
-
-    // < END :: Create Form > //
-
-    // < START :: Edit Form > //
 
     const handleUpdate = async () => {
         const updatedPayload = {
@@ -626,19 +490,12 @@ function HomeVisitationForm() {
             interventions,
         };
 
-        // console.log("Payload: ", updatedPayload);
         const response = await editHomeVis(updatedPayload, caseID, formID);
     };
-
-    // < END :: Edit Form > //
-
-    // < START :: Delete Form > //
 
     const handleDelete = async () => {
         const response = await deleteHomeVis(formID);
     };
-
-    // < END :: Delete Form > //
 
     // ===== END :: Backend Connection ===== //
 
@@ -652,12 +509,9 @@ function HomeVisitationForm() {
     const [modalOnConfirm, setModalOnConfirm] = useState(() => () => { });
     const [modalOnCancel, setModalOnCancel] = useState(undefined);
 
-
     // ===== END :: Modals ===== //
 
     // ===== START :: Local Functions ===== //
-
-    const navigate = useNavigate();
 
     const [savedTime, setSavedTime] = useState(null);
     const timeoutRef = useRef(null);
@@ -691,7 +545,6 @@ function HomeVisitationForm() {
 
     const handleAddObservation = () => {
         const newObservation = "";
-
         setObservationFindings((prev) => [...prev, newObservation]);
     };
 
@@ -709,7 +562,6 @@ function HomeVisitationForm() {
 
     const handleAddIntervention = () => {
         const newIntervention = "";
-
         setInterventions((prev) => [...prev, newIntervention]);
     };
 
@@ -725,14 +577,6 @@ function HomeVisitationForm() {
 
     // ===== END :: Local Functions ===== //
 
-    /**
-     *   Formats the currency
-     *
-     *   @param {*} value : Value to be formatted (assumed Number)
-     *   @returns : The formatted string
-     *
-     *   [NOTE]: Applied this in income display; changed the income input to of type number
-     */
     function currency_Formatter(value) {
         if (typeof value !== "number") return "";
         return value.toLocaleString("en-PH", {
@@ -820,8 +664,6 @@ function HomeVisitationForm() {
 
             const assignedSDWId = returnData.case.assigned_sdw;
 
-            // console.log("RAW DATA: ", assignedSDWId);
-
             if (user?.role === "head") {
                 setAuthorized(true);
                 return;
@@ -839,7 +681,6 @@ function HomeVisitationForm() {
             if (user?.role === "supervisor") {
                 try {
                     const res = await fetchEmployeeById(assignedSDWId);
-                    // console.log("FETCHING EMPLOYEE", res.data.manager, user._id);
                     if (res.ok && res.data.manager === user._id) {
                         setAuthorized(true);
                         return
@@ -865,7 +706,7 @@ function HomeVisitationForm() {
     if (noFormFound) {
         return (
             <main className="flex justify-center w-full p-16">
-                <div className="flex w-full flex-col items-center justify-center gap-16 rounded-lg border border-[var(--border-color)] p-16">
+                <div className="flex w/full flex-col items-center justify-center gap-16 rounded-lg border border-[var(--border-color)] p-16">
                     <div className="flex w-full justify-between">
                         <button
                             onClick={() => navigate(`/case/${caseID}`)}
@@ -939,45 +780,47 @@ function HomeVisitationForm() {
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">Sponsored Member</h4>
                         </div>
-                        <div className="inline-flex items-center justify-center gap-16">
-                            <div className="flex flex-col gap-8">
-                                <TextInput
-                                    label="Last Name"
-                                    value={last_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="First Name"
-                                    value={first_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Middle Name"
-                                    value={middle_name}
-                                    disabled={true}
-                                ></TextInput>
+
+                        <div className={windowWidth <= 800 ? "flex flex-col items-stretch gap-8" : "inline-flex items-center justify-center gap-16"}>
+                            {/* Left column */}
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{
+                                    width: "100%",
+                                    maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                                }}
+                            >
+                                <TextInput placeholder="Last Name" label="Last Name" value={last_name} disabled />
+                                <TextInput placeholder="First Name" label="First Name" value={first_name} disabled />
+                                <TextInput placeholder="Middle Name" label="Middle Name" value={middle_name} disabled />
                             </div>
-                            <div className="flex flex-col gap-8">
+
+                            {/* Right column */}
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{
+                                    width: "100%",
+                                    maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                                }}
+                            >
                                 <TextInput
                                     label="Grade/Year Course"
+                                    placeholder="Grade/Year Course"
                                     value={grade_year_course}
                                     setValue={setGradeYearCourse}
-                                    handleChange={handleChange(
-                                        "Sponsored Member",
-                                    )}
+                                    handleChange={handleChange("Sponsored Member")}
                                     error={errors["grade_year_course"]}
                                     disabled={viewForm}
-                                ></TextInput>
+                                />
                                 <TextInput
                                     label="Year/s in the Program"
+                                    placeholder="Year/s in the Program"
                                     value={years_in_program}
                                     setValue={setYearsInProgram}
-                                    handleChange={handleChange(
-                                        "Sponsored Member",
-                                    )}
+                                    handleChange={handleChange("Sponsored Member")}
                                     error={errors["years_in_program"]}
                                     disabled={viewForm}
-                                ></TextInput>
+                                />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-20">
                                         <p className="label-base w-64">Family Type</p>
@@ -993,37 +836,19 @@ function HomeVisitationForm() {
                                             className={`label-base text-input ${errors["family_type"] ? "text-input-error" : ""}`}
                                             error={errors["family_type"]}
                                         >
-                                            <option value="" className="body-base">
-                                                Select
-                                            </option>
-                                            <option
-                                                value="Nuclear"
-                                                className="body-base"
-                                            >
-                                                Nuclear
-                                            </option>
-                                            <option
-                                                value="Extended"
-                                                className="body-base"
-                                            >
-                                                Extended
-                                            </option>
-                                            <option
-                                                value="Blended"
-                                                className="body-base"
-                                            >
-                                                Blended
-                                            </option>
+                                            <option value="" className="body-base">Select</option>
+                                            <option value="Nuclear" className="body-base">Nuclear</option>
+                                            <option value="Extended" className="body-base">Extended</option>
+                                            <option value="Blended" className="body-base">Blended</option>
                                         </select>
                                     </div>
                                     {errors["family_type"] && (
-                                        <div className="text-red-500 text-sm self-end">
-                                            Missing input
-                                        </div>
+                                        <div className="text-red-500 text-sm self-end">Missing input</div>
                                     )}
                                 </div>
                             </div>
                         </div>
+
                         {savedTime && sectionEdited === "Sponsored Member" && (
                             <p className="mt-2 self-end text-sm">{savedTime}</p>
                         )}
@@ -1036,42 +861,56 @@ function HomeVisitationForm() {
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">General Information</h4>
                         </div>
-                        <div className="inline-flex items-start justify-center gap-16">
-                            <div className="flex flex-col gap-8">
+
+                        <div className={windowWidth <= 800 ? "flex flex-col items-stretch gap-8" : "inline-flex items-start justify-center gap-16"}>
+                            {/* Left column */}
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{
+                                    width: "100%",
+                                    maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                                }}
+                            >
                                 <DateInput
                                     label="Date"
+                                    placeholder="Date"
                                     value={date}
                                     setValue={setDate}
-                                    handleChange={handleChange(
-                                        "General Information",
-                                    )}
+                                    handleChange={handleChange("General Information")}
                                     error={errors["date"]}
                                     disabled={viewForm}
-                                ></DateInput>
+                                />
                                 <TextInput
                                     label="Community"
+                                    placeholder="Community"
                                     value={community}
                                     setValue={setCommunity}
-                                    handleChange={handleChange(
-                                        "General Information",
-                                    )}
+                                    handleChange={handleChange("General Information")}
                                     error={errors["community"]}
                                     disabled={viewForm}
-                                ></TextInput>
+                                />
                             </div>
-                            <div className="flex flex-col gap-8">
+
+                            {/* Right column */}
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{
+                                    width: "100%",
+                                    maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                                }}
+                            >
                                 <TextInput
                                     label="Sponsor Name"
+                                    placeholder="Sponsor Name"
                                     value={sponsor_name}
                                     setValue={setSponsorName}
-                                    handleChange={handleChange(
-                                        "General Information",
-                                    )}
+                                    handleChange={handleChange("General Information")}
                                     error={errors["sponsor_name"]}
                                     disabled={viewForm}
-                                ></TextInput>
+                                />
                             </div>
                         </div>
+
                         {savedTime && sectionEdited === "General Information" && (
                             <p className="mt-2 self-end text-sm">{savedTime}</p>
                         )}
@@ -1079,73 +918,55 @@ function HomeVisitationForm() {
                 </section>
 
                 {/* Father and Mother */}
-                <section className="flex w-full gap-16">
-                    <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
+                <section className={windowWidth <= 800 ? "flex w-full flex-col gap-16" : "flex w-full gap-16"}>
+                    {/* Father */}
+                    <div
+                        className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8"
+                        style={{
+                            width: "100%",
+                            maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                            margin: "0 auto",
+                        }}
+                    >
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">Father</h4>
                         </div>
-                        <div className="inline-flex items-center justify-center gap-16">
-                            <div className="flex flex-col gap-8">
-                                <TextInput
-                                    label="Last Name"
-                                    value={father_last_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="First Name"
-                                    value={father_first_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Middle Name"
-                                    value={father_middle_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Work"
-                                    value={father_work}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Income"
-                                    value={currency_Formatter(father_income)}
-                                    disabled={true}
-                                ></TextInput>
+                        <div className={windowWidth <= 800 ? "flex flex-col gap-8" : "inline-flex items-center justify-center gap-16"}>
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{ width: "100%", maxWidth: windowWidth <= 800 ? "100%" : "40rem" }}
+                            >
+                                <TextInput label="Last Name" placeholder="Last Name" value={father_last_name} disabled />
+                                <TextInput label="First Name" placeholder="First Name" value={father_first_name} disabled />
+                                <TextInput label="Middle Name" placeholder="Middle Name" value={father_middle_name} disabled />
+                                <TextInput label="Work" placeholder="Work" value={father_work} disabled />
+                                <TextInput label="Income" placeholder="Income" value={currency_Formatter(father_income)} disabled />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
+                    {/* Mother */}
+                    <div
+                        className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8"
+                        style={{
+                            width: "100%",
+                            maxWidth: windowWidth <= 800 ? "100%" : "40rem",
+                            margin: "0 auto",
+                        }}
+                    >
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">Mother</h4>
                         </div>
-                        <div className="inline-flex items-center justify-center gap-16">
-                            <div className="flex flex-col gap-8">
-                                <TextInput
-                                    label="Last Name"
-                                    value={mother_last_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="First Name"
-                                    value={mother_first_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Middle Name"
-                                    value={mother_middle_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Work"
-                                    value={mother_work}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Income"
-                                    value={currency_Formatter(mother_income)}
-                                    disabled={true}
-                                ></TextInput>
+                        <div className={windowWidth <= 800 ? "flex flex-col gap-8" : "inline-flex items-center justify-center gap-16"}>
+                            <div
+                                className="flex flex-col gap-8"
+                                style={{ width: "100%", maxWidth: windowWidth <= 800 ? "100%" : "40rem" }}
+                            >
+                                <TextInput label="Last Name" placeholder="Last Name" value={mother_last_name} disabled />
+                                <TextInput label="First Name" placeholder="First Name" value={mother_first_name} disabled />
+                                <TextInput label="Middle Name" placeholder="Middle Name" value={mother_middle_name} disabled />
+                                <TextInput label="Work" placeholder="Work" value={mother_work} disabled />
+                                <TextInput label="Income" placeholder="Income" value={currency_Formatter(mother_income)} disabled />
                             </div>
                         </div>
                     </div>
@@ -1193,33 +1014,57 @@ function HomeVisitationForm() {
                     <h3 className="header-md">
                         Progress in the Family based on their Family Goals
                     </h3>
-                    <div className="flex w-full gap-16">
-                        <TextArea
-                            label="SM"
-                            value={sm_progress}
-                            setValue={setSMProgress}
-                            error={errors["sm_progress"]}
-                            disabled={viewForm}
-                        ></TextArea>
-                        <TextArea
-                            label="Family"
-                            value={family_progress}
-                            setValue={setFamilyProgress}
-                            error={errors["family_progress"]}
-                            disabled={viewForm}
-                        ></TextArea>
+
+                    <div
+                        className={
+                            windowWidth <= 800
+                                ? "flex w-full flex-col gap-8"
+                                : "flex w-full gap-16"
+                        }
+                    >
+                        {/* SM */}
+                        <div
+                            className={windowWidth <= 800 ? "w-full" : "w-full flex-1"}
+                            style={{ maxWidth: windowWidth <= 800 ? "100%" : "unset" }}
+                        >
+                            <TextArea
+                                label="SM"
+                                placeholder="SM"
+                                value={sm_progress}
+                                setValue={setSMProgress}
+                                error={errors["sm_progress"]}
+                                disabled={viewForm}
+                            />
+                        </div>
+
+                        {/* Family */}
+                        <div
+                            className={windowWidth <= 800 ? "w-full" : "w-full flex-1"}
+                            style={{ maxWidth: windowWidth <= 800 ? "100%" : "unset" }}
+                        >
+                            <TextArea
+                                label="Family"
+                                placeholder="Family"
+                                value={family_progress}
+                                setValue={setFamilyProgress}
+                                error={errors["family_progress"]}
+                                disabled={viewForm}
+                            />
+                        </div>
                     </div>
                 </section>
+
 
                 {/* Observation/Findings */}
                 <section className="flex w-full flex-col gap-8">
                     <TextArea
                         label="Worker's Observation/Findings"
+                        placeholder="Worker's Observation/Findings"
                         value={observation_findings}
                         setValue={setObservationFindings}
                         error={errors["observation_findings"]}
                         disabled={viewForm}
-                    ></TextArea>
+                    />
                     {savedTime && sectionEdited === "Observations" && (
                         <p className="mt-2 self-end text-sm">{savedTime}</p>
                     )}
@@ -1229,11 +1074,12 @@ function HomeVisitationForm() {
                 <section className="flex w-full flex-col gap-8">
                     <TextArea
                         label="Interventions Made"
+                        placeholder="Interventions Made"
                         value={interventions}
                         setValue={setInterventions}
                         error={errors["interventions"]}
                         disabled={viewForm}
-                    ></TextArea>
+                    />
                     {savedTime && sectionEdited === "Interventions" && (
                         <p className="mt-2 self-end text-sm">{savedTime}</p>
                     )}
@@ -1241,23 +1087,43 @@ function HomeVisitationForm() {
 
                 {/* Recommendations and Agreement */}
                 <section className="flex w-full flex-col gap-8">
-                    <div className="flex w-full gap-16">
-                        <TextArea
-                            label="Recommendations"
-                            value={recommendations}
-                            setValue={setRecommendation}
-                            error={errors["recommendations"]}
-                            disabled={viewForm}
-                        ></TextArea>
-                        <TextArea
-                            label="Agreement (if any)"
-                            value={agreement}
-                            setValue={setAgreement}
-                            error={errors["agreement"]}
-                            disabled={viewForm}
-                        ></TextArea>
+                    <div
+                        className={
+                            windowWidth <= 800
+                                ? "flex w-full flex-col gap-8"
+                                : "flex w-full gap-16"
+                        }
+                    >
+                        <div
+                            className={windowWidth <= 800 ? "w-full" : "w-full flex-1"}
+                            style={{ maxWidth: windowWidth <= 800 ? "100%" : "unset" }}
+                        >
+                            <TextArea
+                                label="Recommendations"
+                                placeholder="Recommendations"
+                                value={recommendations}
+                                setValue={setRecommendation}
+                                error={errors["recommendations"]}
+                                disabled={viewForm}
+                            />
+                        </div>
+
+                        <div
+                            className={windowWidth <= 800 ? "w-full" : "w-full flex-1"}
+                            style={{ maxWidth: windowWidth <= 800 ? "100%" : "unset" }}
+                        >
+                            <TextArea
+                                label="Agreement (if any)"
+                                placeholder="Agreement (if any)"
+                                value={agreement}
+                                setValue={setAgreement}
+                                error={errors["agreement"]}
+                                disabled={viewForm}
+                            />
+                        </div>
                     </div>
                 </section>
+
 
                 {/* Buttons */}
                 <div className="flex w-full justify-center gap-20">
@@ -1352,49 +1218,6 @@ function HomeVisitationForm() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-
-                    {/* Missing / Invalid Input */}
-                    {/*showErrorOverlay && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                            <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full mx-4 p-8 flex flex-col items-center gap-12
-                                    animate-fadeIn scale-100 transform transition duration-300">
-                                <div className="flex items-center gap-4 border-b-1 ]">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-[2.4rem] w-[2.4rem] text-red-600"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.84-2.75L13.41 4.58a2 2 0 00-3.41 0L3.09 16.25A2 2 0 004.93 19z"
-                                        />
-                                    </svg>
-                                    <h2 className="header-sm font-bold text-red-600 text-center">
-                                        Missing / Invalid Input Detected
-                                    </h2>
-                                </div>
-                                <p className="body-base text-[var(--text-color)] text-center max-w-xl">
-                                    Please fill out all required fields before submitting the form.
-                                </p>
-                                <p className="body-base text-[var(--text-color)] text-center max-w-xl">
-                                    Write N/A if necessary.
-                                </p>
-
-                                {/* OK Button }
-                                <button
-                                    onClick={() => setShowErrorOverlay(false)}
-                                    className="bg-red-600 text-white text-2xl px-6 py-2 rounded-lg hover:bg-red-700 transition"
-                                >
-                                    OK
-                                </button>
-                            </div>
-                        </div>
-                    )*/}
                 </div>
             </main>
         </>

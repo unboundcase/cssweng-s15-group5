@@ -6,6 +6,11 @@
 const mongoose = require('mongoose');
 const Family_Relationship = require('../model/family_relationship');
 const Sponsored_Member = require('../model/sponsored_member')
+const Intervention_Correspondence = require('../model/intervention_correspondence');
+const Intervention_Counseling = require('../model/intervention_counseling');
+const Intervention_Financial = require('../model/intervention_financial');
+const Intervention_HomeVisit = require('../model/intervention_homevisit');
+const Progress_Report = require('../model/progress_report');
 const Family_Member = require('../model/family_member')
 const Employee = require('../model/employee');
 const Spu = require('../model/spu')
@@ -232,6 +237,7 @@ const getAllCases = async (req, res) => {
                ? `${c.assigned_sdw.first_name} ${c.assigned_sdw.middle_name || ''} ${c.assigned_sdw.last_name}`.trim()
                : null,
                pendingTermination: pendingIds.includes(c._id.toString()) ?? false,
+               createdAt: c.createdAt,
           }));
           
           res.json(simplifiedCases);
@@ -987,6 +993,152 @@ const addIntervention = async (req, res) => {
      // code here
 }
 
+/**  
+ *   Deletes a case but starts a transaction first.
+ *   Just to be sure, either everything gets deleted or nothing is.
+ */
+const deleteOneCase = async (req, res) => {
+     try {
+          const caseSelected = await Sponsored_Member.findById(req.params.caseID);
+
+          if (!caseSelected) {
+               return res.status(400).json({ message: `Cannot proceed action, missing IDs.` });
+          }
+
+          // Start a transaction for atomicity
+          const session = await mongoose.startSession();
+          session.startTransaction();
+
+          try {
+               // 1. Delete all family members and their relationships
+               const members = await Family_Relationship.find({ sponsor_id: caseSelected }).session(session);
+               
+               for (const member of members) {
+                    const famId = member.family_id && member.family_id._id ? member.family_id._id.toString() : member.family_id.toString();
+                    
+                    // Delete the relationship
+                    await Family_Relationship.deleteOne({ 
+                         family_id: famId, 
+                         sponsor_id: caseSelected._id 
+                    }).session(session);
+
+                    // Check if family member has other relationships before deleting
+                    const hasOtherRelationships = await Family_Relationship.findOne({ 
+                         family_id: famId 
+                    }).session(session);
+                    
+                    if (!hasOtherRelationships) {
+                         await Family_Member.deleteOne({ _id: famId }).session(session);
+                    }
+               }
+
+               // 2. Delete associated case closures
+               await Case_Closure.deleteMany({ sm: caseSelected }).session(session);
+
+               // 3. Delete associated interventions
+               await Promise.all([
+                    // Delete correspondence interventions
+                    Intervention_Correspondence.deleteMany({ sm: caseSelected }).session(session),
+                    // Delete counseling interventions
+                    Intervention_Counseling.deleteMany({ sm: caseSelected }).session(session),
+                    // Delete financial interventions
+                    Intervention_Financial.deleteMany({ sm: caseSelected }).session(session),
+                    // Delete home visit interventions
+                    Intervention_HomeVisit.deleteMany({ sm: caseSelected }).session(session)
+               ]);
+
+               // 4. Delete associated progress reports
+               await Progress_Report.deleteMany({ sm: caseSelected }).session(session);
+
+               // 5. Finally delete the sponsored member case
+               const deletedCase = await Sponsored_Member.findByIdAndDelete(caseSelected._id).session(session);
+
+               if (!deletedCase) {
+                    throw new Error('Case not found');
+               }
+
+               // Commit the transaction
+               await session.commitTransaction();
+               session.endSession();
+
+               res.status(200).json({
+                    message: 'Case and all related records deleted successfully',
+                    deletedCase
+               });
+               
+
+          } catch (error) {
+               // If anything fails, abort the transaction
+               await session.abortTransaction();
+               session.endSession();
+               throw error;
+          }
+
+     } catch (error) {
+          console.error("Error deleting case:", error);
+          res.status(500).json({ message: "Internal Server Error" });
+     }
+}
+
+/** 
+ * Deletes multiple cases by id array in the request body.
+ * Utilizes the existing deleteOneCase for each id and continues on error.
+ * Expects: { ids: ['id1', 'id2', ...] } in req.body
+ */
+const deleteManyCases = async (req, res) => {
+     try {
+          const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+          if (!ids.length) {
+               return res.status(400).json({ message: 'No case IDs provided' });
+          }
+
+          const results = [];
+
+          // dummyRes captures status/json called by deleteOneCase without sending real responses
+          const makeDummyRes = () => {
+               const d = {
+                    _status: 200,
+                    _json: null,
+                    status(code) { this._status = code; return this; },
+                    json(payload) { this._json = payload; return this; },
+                    end() { return this; }
+               };
+               return d;
+          };
+
+          for (const id of ids) {
+               // validate id quickly
+               if (!mongoose.Types.ObjectId.isValid(id)) {
+                    results.push({ id, success: false, error: 'Invalid ObjectId' });
+               }
+
+               const dummyReq = { params: { caseID: id } };
+               const dummyRes = makeDummyRes();
+
+               try {
+                    // call existing deleteOneCase (it will use dummyRes and won't send real responses)
+                    await deleteOneCase(dummyReq, dummyRes);
+
+                    // treat status 2xx as success
+                    if (dummyRes._status >= 200 && dummyRes._status < 300) {
+                         results.push({ id, success: true, detail: dummyRes._json || null });
+                    } else {
+                         results.push({ id, success: false, status: dummyRes._status, detail: dummyRes._json || null });
+                    }
+               } catch (err) {
+                    // ensure we continue even if deleteOneCase throws
+                    results.push({ id, success: false, error: err.message || 'Deletion failed' });
+               }
+          }
+
+          return res.status(200).json({ results });
+     } catch (error) {
+          console.error('Error in deleteManyCases:', error);
+          return res.status(500).json({ message: 'Internal Server Error' });
+     }
+}
+
+
 // ================================================== //
 
 /**
@@ -1022,4 +1174,6 @@ module.exports = {
      editCaseIdentifyingData,
      getAllSDWs,
      getAllCasesbySDW,
+     deleteOneCase,
+     deleteManyCases,
 }

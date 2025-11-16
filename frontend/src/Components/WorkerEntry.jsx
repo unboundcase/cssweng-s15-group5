@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+
 function getColorFromId(id) {
   let hash = 0;
   const strId = id.toString();
@@ -32,11 +34,12 @@ function getTextColorForBackground(hsl) {
 
 export default function WorkerEntry({
   id,
-  // sdw_id,
   name,
   role,
   spu_id,
-  archive
+  archive,
+  hideSpuColumn = false,
+  hideTypeColumn = false
 }) {
   const initials = name.charAt(0).toUpperCase();
 
@@ -48,11 +51,16 @@ export default function WorkerEntry({
     textColor = "#ffffff";
   }
 
+  const getGridClasses = () => {
+    if (hideTypeColumn) return 'grid grid-cols-[1fr]';
+    if (hideSpuColumn) return 'grid grid-cols-[2fr_1fr]';
+    return 'grid grid-cols-[2fr_1fr_2fr]';
+  };
+
   return (
     <a
       href={`/profile/${id}`}
-      // href={`/workers/${id}`}
-      className="client-entry grid grid-cols-[2fr_1fr_2fr] items-center p-5 mb-2 bg-white rounded-lg font-bold-label"
+      className={`client-entry ${getGridClasses()} items-center p-5 mb-2 bg-white rounded-lg font-bold-label`}
     >
       <div className="flex items-center gap-6">
         <div
@@ -63,11 +71,17 @@ export default function WorkerEntry({
         </div>
         <div className="flex flex-col gap-2">
           <p>{name}</p>
-          {/* <p>{sdw_id}</p> */}
+          {hideTypeColumn && (
+            <p>
+              {role === "sdw" ? "SDW" : role === "supervisor" ? "Supervisor" : "Head"}
+            </p>
+          )}
         </div>
       </div>
-      <p className="text-center">{role === "sdw" ? "SDW" : role === "supervisor" ? "Supervisor" : "Head"}</p>
-      <p className="text-center ml-[4%]">{spu_id}</p>
+      {!hideTypeColumn && (
+        <p className="text-center">{role === "sdw" ? "SDW" : role === "supervisor" ? "Supervisor" : "Head"}</p>
+      )}
+      {!hideSpuColumn && !hideTypeColumn && <p className="text-center ml-[4%]">{spu_id}</p>}
     </a>
   );
 }

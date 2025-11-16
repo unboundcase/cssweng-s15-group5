@@ -1,14 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../fetch-connections/account-connection";
-
+//
 export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
     const navigate = useNavigate();
 
+    const isSmallScreen = windowWidth <= 720;
+    const isVerySmallScreen = windowWidth <= 600;
+    const isExtraSmallScreen = windowWidth <= 450;
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const original = document.body.style.backgroundColor;
@@ -46,15 +59,15 @@ export default function Login() {
 
     return (
         <>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white
-                            max-w-[75rem] w-full min-h-max rounded-lg drop-shadow-card flex
-                            flex-col justify-around items-center pb-10 gap-5">
+            <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white
+                            ${isSmallScreen ? 'w-[calc(100%-2rem)] max-w-[95vw] h-auto p-4' : 'max-w-[75rem] w-full h-auto p-10'} rounded-lg drop-shadow-card flex
+                            flex-col justify-around items-center gap-5 overflow-y-auto`}>
 
                 <div className="main-logo main-logo-text-nav flex items-center">
-                    <div className="main-logo-setup folder-logo !w-[8rem] !h-[12rem]"></div>
+                    <div className={`main-logo-setup folder-logo ${isExtraSmallScreen ? '!w-[6rem] !h-[8rem]' : '!w-[8rem] !h-[12rem]'}`}></div>
                     <div className="flex flex-col">
-                        <p className="main-logo-text-nav-sub !text-[2rem] mb-[-1rem]">Unbound Manila Foundation Inc.</p>
-                        <p className="main-logo-text-nav !text-[3rem]">Case Management System</p>
+                        <p className={`main-logo-text-nav-sub mb-[-1rem] break-words ${isExtraSmallScreen ? '!text-[1.5rem]' : '!text-[2rem]'}`}>Unbound Manila Foundation Inc.</p>
+                        <p className={`main-logo-text-nav break-words ${isExtraSmallScreen ? '!text-[2rem]' : '!text-[3rem]'}`}>Case Management System</p>
                     </div>
                 </div>
 

@@ -80,6 +80,15 @@ function CaseClosure() {
     const viewForm = action !== 'create' ? true : false;
     const [sdw_view, setSDWView] = useState(true);
 
+    const [windowWidth, setWindowWidth] = useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+    useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
+
     useEffect(() => {
         setLoadingStage(0);
         const loadSession = async () => {
@@ -194,7 +203,7 @@ function CaseClosure() {
                 }));
 
                 setServicesProvided(formData.services_provided || []);
-                    };
+            };
             loadData();
 
             setLoadingStage(2);
@@ -288,7 +297,7 @@ function CaseClosure() {
         if (!reason_for_retirement || !reason_for_retirement.trim()) { fieldErrors.reason_for_retirement = "Reason for Retirement is required."; }
         if (sm_awareness !== true && sm_awareness !== false) { fieldErrors.sm_awareness = "Client SM Awareness must be selected."; }
         if (sm_awareness && (!sm_notification || !sm_notification.trim())) { fieldErrors.sm_notification = "Client Notification is required if SM is aware."; }
-        if (!evaluation || !evaluation.trim()) { fieldErrors.evaluation = "Evaluation is required.";}
+        if (!evaluation || !evaluation.trim()) { fieldErrors.evaluation = "Evaluation is required."; }
         if (!recommendation || !recommendation.trim()) { fieldErrors.recommendation = "Recommendation is required."; }
 
         services_provided.forEach((item, index) => {
@@ -692,73 +701,67 @@ function CaseClosure() {
 
                     {/* Sponsored Member and General Info */}
                     <section className="flex w-full flex-col gap-16">
+                        {/* SPONSORED MEMBER */}
                         <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
                             <div className="flex border-b border-[var(--border-color)]">
                                 <h4 className="header-sm">Sponsored Member</h4>
                             </div>
-                            <div className="inline-flex items-start justify-center gap-16">
+
+                            {windowWidth <= 800 ? (
+                                // MOBILE (stack both columns together)
                                 <div className="flex flex-col gap-8">
-                                    <TextInput
-                                        label="Last Name"
-                                        value={last_name}
-                                        disabled={true}
-                                    ></TextInput>
-                                    <TextInput
-                                        label="First Name"
-                                        value={first_name}
-                                        disabled={true}
-                                    ></TextInput>
-                                    <TextInput
-                                        label="Middle Name"
-                                        value={middle_name}
-                                        disabled={true}
-                                    ></TextInput>
-                                    <TextInput
-                                        label="CH ID #"
-                                        value={ch_number}
-                                        disabled={true}
-                                    ></TextInput>
-                                </div>
-                                <div className="flex flex-col gap-8">
-                                    <DateInput
-                                        label="Date of Birth"
-                                        value={dob}
-                                        disabled={true}
-                                    ></DateInput>
-                                    <TextInput
-                                        label="Age"
-                                        value={age}
-                                        disabled={true}
-                                    ></TextInput>
-                                    <TextInput
-                                        label="Religion"
-                                        value={religion}
-                                        disabled={true}
-                                    ></TextInput>
-                                    <div className="flex gap-16">
-                                        <p className="label-base w-72">Address</p>
+                                    <TextInput label="Last Name" value={last_name} disabled />
+                                    <TextInput label="First Name" value={first_name} disabled />
+                                    <TextInput label="Middle Name" value={middle_name} disabled />
+                                    <TextInput label="CH ID #" value={ch_number} disabled />
+                                    <DateInput label="Date of Birth" value={dob} disabled />
+                                    <TextInput label="Age" value={age} disabled />
+                                    <TextInput label="Religion" value={religion} disabled />
+                                    <div className="flex flex-col gap-2">
+                                        <p className="label-base">Address</p>
                                         <textarea
                                             value={address}
-                                            disabled={true}
+                                            disabled
                                             className="body-base text-area h-32 cursor-not-allowed bg-gray-200"
-                                        ></textarea>
+                                        />
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                // DESKTOP (two-column layout)
+                                <div className="inline-flex items-start justify-center gap-16">
+                                    <div className="flex flex-col gap-8">
+                                        <TextInput label="Last Name" value={last_name} disabled />
+                                        <TextInput label="First Name" value={first_name} disabled />
+                                        <TextInput label="Middle Name" value={middle_name} disabled />
+                                        <TextInput label="CH ID #" value={ch_number} disabled />
+                                    </div>
+                                    <div className="flex flex-col gap-8">
+                                        <DateInput label="Date of Birth" value={dob} disabled />
+                                        <TextInput label="Age" value={age} disabled />
+                                        <TextInput label="Religion" value={religion} disabled />
+                                        <div className="flex gap-16">
+                                            <p className="label-base w-72">Address</p>
+                                            <textarea
+                                                value={address}
+                                                disabled
+                                                className="body-base text-area h-32 cursor-not-allowed bg-gray-200"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
+
+                        {/* GENERAL INFORMATION */}
                         <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
                             <div className="flex border-b border-[var(--border-color)]">
                                 <h4 className="header-sm">General Information</h4>
                             </div>
-                            <div className="inline-flex items-start justify-center gap-16">
+
+                            {windowWidth <= 800 ? (
+                                // MOBILE (stacked version)
                                 <div className="flex flex-col gap-8">
-                                    <TextInput
-                                        label="Name of SPU/Cluster"
-                                        value={spu}
-                                        disabled={true}
-                                    ></TextInput>
-                                </div>
-                                <div className="flex flex-col gap-8">
+                                    <TextInput label="Name of SPU/Cluster" value={spu} disabled />
                                     <DateInput
                                         label="Date of Closure"
                                         value={closure_date}
@@ -766,7 +769,7 @@ function CaseClosure() {
                                         handleChange={handleChange("General Information")}
                                         disabled={viewForm}
                                         error={errors["closure_date"]}
-                                    ></DateInput>
+                                    />
                                     <DateInput
                                         label="Date Sponsored"
                                         value={sponsorship_date}
@@ -774,14 +777,41 @@ function CaseClosure() {
                                         handleChange={handleChange("General Information")}
                                         disabled={viewForm}
                                         error={errors["sponsorship_date"]}
-                                    ></DateInput>
+                                    />
                                 </div>
-                            </div>
+                            ) : (
+                                // DESKTOP (two-column layout)
+                                <div className="inline-flex items-start justify-center gap-16">
+                                    <div className="flex flex-col gap-8">
+                                        <TextInput label="Name of SPU/Cluster" value={spu} disabled />
+                                    </div>
+                                    <div className="flex flex-col gap-8">
+                                        <DateInput
+                                            label="Date of Closure"
+                                            value={closure_date}
+                                            setValue={setClosureDate}
+                                            handleChange={handleChange("General Information")}
+                                            disabled={viewForm}
+                                            error={errors["closure_date"]}
+                                        />
+                                        <DateInput
+                                            label="Date Sponsored"
+                                            value={sponsorship_date}
+                                            setValue={setSponsorshipDate}
+                                            handleChange={handleChange("General Information")}
+                                            disabled={viewForm}
+                                            error={errors["sponsorship_date"]}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             {savedTime && sectionEdited === "General Information" && (
                                 <p className="text-sm self-end mt-2">{savedTime}</p>
                             )}
                         </div>
                     </section>
+
 
                     {/* Reason for Retirement and SM Notification */}
                     <section className="flex w-full flex-col gap-8">
@@ -792,43 +822,61 @@ function CaseClosure() {
                             setValue={setReasonForRetirement}
                             disabled={viewForm}
                             error={errors["reason_for_retirement"]}
-                        ></TextArea>
-                        <div className={`flex min-w-lg flex-col gap-8 ${errors["sm_awareness"] ? "p-12 border rounded-xl border-red-500" : ""}`}>
+                        />
+
+                        <div
+                            className={`flex min-w-lg flex-col gap-8 ${errors["sm_awareness"] ? "p-12 border rounded-xl border-red-500" : ""
+                                }`}
+                        >
                             <p className="body-base">Is the client or SM aware of case closure?</p>
-                            <div className="flex gap-12">
-                                <label className="flex items-center body-base gap-4">
-                                    <input
-                                        type="radio"
-                                        name="sm_awareness"
-                                        value="yes"
-                                        checked={sm_awareness === true || data.sm_awareness === true}
-                                        onChange={() => setSMAwareness(true)}
-                                        disabled={viewForm}
+
+                            <div
+                                className={`flex flex-wrap ${windowWidth <= 500
+                                        ? "flex-col gap-4"
+                                        : "flex-row items-center gap-8"
+                                    }`}
+                            >
+                                {/* Radio buttons stay horizontal */}
+                                <div className="inline-flex items-center gap-6 w-max flex-shrink-0">
+                                    <label className="inline-flex items-center body-base gap-2 whitespace-nowrap">
+                                        <input
+                                            type="radio"
+                                            name="sm_awareness"
+                                            value="yes"
+                                            checked={sm_awareness === true || data.sm_awareness === true}
+                                            onChange={() => setSMAwareness(true)}
+                                            disabled={viewForm}
+                                        />
+                                        Yes
+                                    </label>
+                                    <label className="inline-flex items-center body-base gap-2 whitespace-nowrap">
+                                        <input
+                                            type="radio"
+                                            name="sm_awareness"
+                                            value="no"
+                                            checked={sm_awareness === false || data.sm_awareness === false}
+                                            onChange={() => setSMAwareness(false)}
+                                            disabled={viewForm}
+                                        />
+                                        No
+                                    </label>
+                                </div>
+
+                                {/* TextArea — below on ≤500, beside otherwise */}
+                                <div className={`flex-1 ${windowWidth <= 500 ? "mt-2" : ""}`}>
+                                    <TextArea
+                                        sublabel="If yes, how was the client notified"
+                                        value={sm_notification}
+                                        setValue={setSMNotification}
+                                        disabled={viewForm || sm_awareness === false}
+                                        error={sm_awareness === true ? errors["sm_notification"] : undefined}
                                     />
-                                    Yes
-                                </label>
-                                <label className="flex items-center body-base gap-4">
-                                    <input
-                                        type="radio"
-                                        name="sm_awareness"
-                                        value="no"
-                                        checked={sm_awareness === false || data.sm_awareness === false}
-                                        onChange={(e) => setSMAwareness(false)}
-                                        disabled={viewForm}
-                                    />
-                                    No
-                                </label>
-                                <TextArea
-                                    sublabel="If yes, how was the client notified"
-                                    value={sm_notification}
-                                    setValue={setSMNotification}
-                                    disabled={viewForm || sm_awareness === false}
-                                    error={sm_awareness === true ? errors["sm_notification"] : undefined}
-                                ></TextArea>
+                                </div>
                             </div>
                         </div>
-
                     </section>
+
+
 
                     {/* Services Provided */}
                     <section className="flex w-full flex-col gap-16">

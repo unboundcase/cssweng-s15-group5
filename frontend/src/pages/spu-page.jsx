@@ -26,6 +26,8 @@ export default function SpuPage() {
 
     const [collapsedSpus, setCollapsedSpus] = useState({});
     const [addOpen, setAddOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
     const [loadingStage, setLoadingStage] = useState(0);
     const [loadingComplete, setLoadingComplete] = useState(false);
@@ -39,57 +41,73 @@ export default function SpuPage() {
         onConfirm: null,
     });
 
+    const isMobile = windowWidth <= 700; // Changed from 650 to 700 to match home-leader
+    const isVerySmall = windowWidth <= 400;
+    const hideSpuColumn = windowWidth <= 800;
+    const hideTypeColumn = windowWidth <= 400;
+    const hideCHColumn = windowWidth <= 800;
+    const hideSDWColumn = windowWidth <= 380;
+
     useEffect(() => {
         document.title = "SPU Page";
     }, []);
 
-const loadData = async () => {
-            try {
-                setLoadingStage(0); // red
-
-                const sessionData = await fetchSession();
-                const currentUser = sessionData?.user;
-                setUser(currentUser);
-
-                if (!currentUser || currentUser.role !== "head") {
-                    navigate("/unauthorized");
-                    return;
-                }
-
-                setLoadingStage(1); // blue
-
-                const [allSpus, allSdws, allCases] = await Promise.all([
-                    fetchAllSpus(),
-                    fetchAllSDWs(),
-                    fetchAllCases(),
-                ]);
-
-                const activeSpus = (allSpus || []).filter(spu => spu.is_active);
-                setSpus(activeSpus);
-
-                const activeSdws = (allSdws || []).filter(sdw => sdw.is_active);
-                setSdws(activeSdws);
-
-                const activeCases = (allCases || []).filter(c => c.is_active);
-                setCases(activeCases);
-
-                const initialCollapseState = {};
-                activeSpus.forEach(spu => {
-                    initialCollapseState[spu._id] = true;
-                });
-                setCollapsedSpus(initialCollapseState);
-
-                setLoadingStage(2); // green
-                setLoadingComplete(true); // smooth transition
-            } catch (err) {
-                console.error("Error loading SPU data page:", err);
-                navigate("/unauthorized");
-            }
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
         };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const loadData = async () => {
+        try {
+            setLoadingStage(0); // red
+
+            const sessionData = await fetchSession();
+            const currentUser = sessionData?.user;
+            setUser(currentUser);
+
+            if (!currentUser || currentUser.role !== "head") {
+                navigate("/unauthorized");
+                return;
+            }
+
+            setLoadingStage(1); // blue
+
+            const [allSpus, allSdws, allCases] = await Promise.all([
+                fetchAllSpus(),
+                fetchAllSDWs(),
+                fetchAllCases(),
+            ]);
+
+            const activeSpus = (allSpus || []).filter(spu => spu.is_active);
+            setSpus(activeSpus);
+
+            const activeSdws = (allSdws || []).filter(sdw => sdw.is_active);
+            setSdws(activeSdws);
+
+            const activeCases = (allCases || []).filter(c => c.is_active);
+            setCases(activeCases);
+
+            const initialCollapseState = {};
+            activeSpus.forEach(spu => {
+                initialCollapseState[spu._id] = true;
+            });
+            setCollapsedSpus(initialCollapseState);
+
+            setLoadingStage(2); // green
+            setLoadingComplete(true); // smooth transition
+        } catch (err) {
+            console.error("Error loading SPU data page:", err);
+            navigate("/unauthorized");
+        }
+    };
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [navigate]); // Add navigate as dependency
 
     const toggleSpuCollapse = (spuId) => {
         setCollapsedSpus(prev => ({
@@ -175,20 +193,44 @@ const loadData = async () => {
                 existingSpus={spus}
             />
 
-            <div className="fixed top-0 left-0 right-0 z-50 w-full max-w-[1280px] mx-auto flex justify-between items-center py-5 px-8 bg-white">
-                <a href="/" className="main-logo main-logo-text-nav">
-                    <div className="main-logo-setup folder-logo"></div>
-                    <div className="flex flex-col">
-                        <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila Foundation Inc.</p>
-                        <p className="main-logo-text-nav">Case Management System</p>
-                    </div>
-                </a>
+            <div className="fixed top-0 left-0 right-0 z-60 w-full max-w-[1280px] mx-auto flex justify-between items-center py-5 px-8 bg-white">
+                <div className="flex items-center gap-4">
+                    {isMobile && (
+                        <button
+                            className="side-icon-setup menu-button"
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        >
+                        </button>
+                    )}
+
+                    <a href="/" className="main-logo main-logo-text-nav">
+                        <div className="main-logo-setup folder-logo"></div>
+                        <div className="flex flex-col">
+                            {isVerySmall ? (
+                                <>
+                                    <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila</p>
+                                    <p className="main-logo-text-nav">CMS</p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="main-logo-text-nav-sub mb-[-1rem]">Unbound Manila Foundation Inc.</p>
+                                    <p className="main-logo-text-nav">Case Management System</p>
+                                </>
+                            )}
+                        </div>
+                    </a>
+                </div>
             </div>
 
             <main className="min-h-[calc(100vh-4rem)] w-full flex mt-[9rem]">
-                <SideBar user={user} />
+                <SideBar
+                    user={user}
+                    isMenuOpen={isMenuOpen}
+                    setIsMenuOpen={setIsMenuOpen}
+                    isMobile={isMobile}
+                />
 
-                <div className="flex flex-col w-full gap-10 ml-[15rem] px-8 pb-20">
+                <div className={`flex flex-col w-full gap-10 max-[700px]:gap-8 ${isMobile ? 'ml-0' : 'ml-[15rem]'} px-8 pb-20`}>
                     <div className="flex justify-between items-center">
                         <h1 className="header-main">SPU Overview</h1>
                         <button
@@ -217,8 +259,18 @@ const loadData = async () => {
                                             <p className="font-label">
                                                 {spuWorkers.length} worker(s), {spuCases.length} case(s)
                                             </p>
+                                            {spu.createdAt && (
+                                                <p className="font-label text-sm text-gray-600 mt-1">
+                                                    Created: {new Date(spu.createdAt).toLocaleDateString('en-PH', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            )}
                                         </div>
-
                                         <motion.button
                                             onClick={() => toggleSpuCollapse(spu._id)}
                                             className="icon-button-setup chevron-button"
@@ -243,10 +295,10 @@ const loadData = async () => {
                                                         <p className="font-label">No workers assigned.</p>
                                                     ) : (
                                                         <>
-                                                            <div className="grid grid-cols-[2fr_1fr_2fr] items-center border-b border-gray-400 pb-2 mb-2">
+                                                            <div className={`${hideTypeColumn ? 'grid grid-cols-[1fr]' : hideSpuColumn ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-cols-[2fr_1fr_2fr]'} items-center border-b border-gray-400 pb-2 mb-2`}>
                                                                 <p className="font-bold-label ml-[20%]">Worker</p>
-                                                                <p className="font-bold-label text-center">Type</p>
-                                                                <p className="font-bold-label text-center">SPU</p>
+                                                                {!hideTypeColumn && <p className="font-bold-label text-center">Type</p>}
+                                                                {!hideSpuColumn && !hideTypeColumn && <p className="font-bold-label text-center">SPU</p>}
                                                             </div>
                                                             {spuWorkers.map((worker) => (
                                                                 <WorkerEntry
@@ -255,6 +307,8 @@ const loadData = async () => {
                                                                     name={`${worker.first_name} ${worker.last_name}`}
                                                                     role={worker.role}
                                                                     spu_id={worker.spu_id}
+                                                                    hideSpuColumn={hideSpuColumn}
+                                                                    hideTypeColumn={hideTypeColumn}
                                                                 />
                                                             ))}
                                                         </>
@@ -267,10 +321,10 @@ const loadData = async () => {
                                                         <p className="font-label">No cases recorded.</p>
                                                     ) : (
                                                         <>
-                                                            <div className="grid grid-cols-[2fr_1fr_2fr] items-center border-b border-gray-400 pb-2 mb-2">
+                                                            <div className={`${hideSDWColumn ? 'grid grid-cols-[1fr]' : hideCHColumn ? 'grid grid-cols-[2fr_2fr]' : 'grid grid-cols-[2fr_1fr_2fr]'} items-center border-b border-gray-400 pb-2 mb-2`}>
                                                                 <p className="font-bold-label ml-[20%]">Name</p>
-                                                                <p className="font-bold-label text-center">CH Number</p>
-                                                                <p className="font-bold-label text-center">SDW Assigned</p>
+                                                                {!hideCHColumn && !hideSDWColumn && <p className="font-bold-label text-center">CH Number</p>}
+                                                                {!hideSDWColumn && <p className="font-bold-label text-center">SDW Assigned</p>}
                                                             </div>
                                                             {spuCases.map((client) => (
                                                                 <ClientEntry
@@ -281,6 +335,8 @@ const loadData = async () => {
                                                                     name={client.name}
                                                                     assigned_sdw_name={client.assigned_sdw_name}
                                                                     pendingTermination={client.pendingTermination ?? false}
+                                                                    hideCHColumn={hideCHColumn}
+                                                                    hideSDWColumn={hideSDWColumn}
                                                                 />
                                                             ))}
                                                         </>

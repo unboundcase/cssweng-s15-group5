@@ -84,6 +84,16 @@ function CorrespondenceForm() {
 
     const viewForm = action !== 'create' ? true : false;
 
+    const [windowWidth, setWindowWidth] = useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+    useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
+
+
     useEffect(() => {
         setLoadingStage(0);
         const loadSession = async () => {
@@ -404,7 +414,7 @@ function CorrespondenceForm() {
 
         setModalTitle("Confirm Creation");
         setModalBody("Are you sure you want to save this Correspondence Form? This cannot be edited or deleted after creation.");
-        setModalImageCenter(<div className="info-icon mx-auto" />);
+        setModalImageCenter(<div className="warning-icon mx-auto" />);
         setModalConfirm(true);
         setModalOnConfirm(() => async () => {
             setShowModal(false);
@@ -703,58 +713,80 @@ function CorrespondenceForm() {
 
                 {/* Sponsored Member and General Info */}
                 <section className="flex w-full flex-col gap-16">
+                    {/* SPONSORED MEMBER */}
                     <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">Sponsored Member</h4>
                         </div>
-                        <div className="inline-flex items-start justify-center gap-16">
+
+                        <div
+                            className={
+                                windowWidth <= 800
+                                    ? "flex flex-col gap-8"
+                                    : "inline-flex items-start justify-center gap-16"
+                            }
+                        >
+                            {/* LEFT COLUMN */}
                             <div className="flex flex-col gap-8">
-                                <TextInput
-                                    label="Last Name"
-                                    value={last_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="First Name"
-                                    value={first_name}
-                                    disabled={true}
-                                ></TextInput>
-                                <TextInput
-                                    label="Middle Name"
-                                    value={middle_name}
-                                    disabled={true}
-                                ></TextInput>
+                                <TextInput label="Last Name" value={last_name} disabled placeholder="Last Name" />
+                                <TextInput label="First Name" value={first_name} disabled placeholder="First Name" />
+                                <TextInput label="Middle Name" value={middle_name} disabled placeholder="Middle Name" />
+
+                                {/* Move these fields below when ≤800px */}
+                                {windowWidth <= 800 && (
+                                    <>
+                                        <TextInput label="CH ID #" value={ch_number} disabled placeholder="CH ID #" />
+                                        <DateInput label="Date of Birth" value={dob} disabled placeholder="Date of Birth" />
+                                        <div className="flex flex-col gap-2">
+                                            <p className="label-base">Address</p>
+                                            <textarea
+                                                value={address}
+                                                disabled
+                                                placeholder="Address"
+                                                className="body-base text-area h-32 cursor-not-allowed bg-gray-200"
+                                            ></textarea>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-8">
-                                <TextInput
-                                    label="CH ID #"
-                                    value={ch_number}
-                                    disabled={true}
-                                ></TextInput>
-                                <DateInput
-                                    label="Date of Birth"
-                                    value={dob}
-                                    disabled={true}
-                                ></DateInput>
-                                <div className="flex gap-16">
-                                    <p className="label-base w-72">Address</p>
-                                    <textarea
-                                        value={address}
-                                        disabled={true}
-                                        className="body-base text-area h-32 cursor-not-allowed bg-gray-200"
-                                    ></textarea>
+
+                            {/* RIGHT COLUMN visible only when >800px */}
+                            {windowWidth > 800 && (
+                                <div className="flex flex-col gap-8">
+                                    <TextInput label="CH ID #" value={ch_number} disabled placeholder="CH ID #" />
+                                    <DateInput label="Date of Birth" value={dob} disabled placeholder="Date of Birth" />
+                                    <div className="flex gap-16">
+                                        <p className="label-base w-72">Address</p>
+                                        <textarea
+                                            value={address}
+                                            disabled
+                                            placeholder="Address"
+                                            className="body-base text-area h-32 cursor-not-allowed bg-gray-200"
+                                        ></textarea>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
+
                         {savedTime && sectionEdited === "Sponsored Member" && (
                             <p className="text-sm self-end mt-2">{savedTime}</p>
                         )}
                     </div>
+
+                    {/* GENERAL INFORMATION */}
                     <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
                         <div className="flex border-b border-[var(--border-color)]">
                             <h4 className="header-sm">General Information</h4>
                         </div>
-                        <div className="inline-flex items-start justify-center gap-16">
+
+                        <div
+                            className={
+                                windowWidth <= 800
+                                    ? "flex flex-col gap-8"
+                                    : "inline-flex items-start justify-center gap-16"
+                            }
+                        >
+                            {/* LEFT COLUMN */}
                             <div className="flex flex-col gap-8">
                                 <TextInput
                                     label="Name of Sponsor"
@@ -763,31 +795,53 @@ function CorrespondenceForm() {
                                     handleChange={handleChange("General Information")}
                                     error={errors["name_of_sponsor"]}
                                     disabled={viewForm}
-                                ></TextInput>
+                                    placeholder="Name of Sponsor"
+                                />
                                 <TextInput
                                     label="Sub-Project"
                                     value={subproject}
                                     setValue={setSubproject}
-                                    disabled={true}
                                     handleChange={handleChange("General Information")}
-                                ></TextInput>
+                                    disabled
+                                    placeholder="Sub-Project"
+                                />
+
+                                {/* Move this down when ≤800px */}
+                                {windowWidth <= 800 && (
+                                    <DateInput
+                                        label="Date of Sponsorship"
+                                        value={date_of_sponsorship}
+                                        setValue={setSponsorshipDate}
+                                        handleChange={handleChange("General Information")}
+                                        error={errors["date_of_sponsorship"]}
+                                        disabled={viewForm}
+                                        placeholder="Date of Sponsorship"
+                                    />
+                                )}
                             </div>
-                            <div className="flex flex-col gap-8">
-                                <DateInput
-                                    label="Date of Sponsorship"
-                                    value={date_of_sponsorship}
-                                    setValue={setSponsorshipDate}
-                                    handleChange={handleChange("General Information")}
-                                    error={errors["date_of_sponsorship"]}
-                                    disabled={viewForm}
-                                ></DateInput>
-                            </div>
+
+                            {/* RIGHT COLUMN visible only when >800px */}
+                            {windowWidth > 800 && (
+                                <div className="flex flex-col gap-8">
+                                    <DateInput
+                                        label="Date of Sponsorship"
+                                        value={date_of_sponsorship}
+                                        setValue={setSponsorshipDate}
+                                        handleChange={handleChange("General Information")}
+                                        error={errors["date_of_sponsorship"]}
+                                        disabled={viewForm}
+                                        placeholder="Date of Sponsorship"
+                                    />
+                                </div>
+                            )}
                         </div>
+
                         {savedTime && sectionEdited === "General Information" && (
                             <p className="text-sm self-end mt-2">{savedTime}</p>
                         )}
                     </div>
                 </section>
+
 
                 {/* Identified Problem */}
                 <section className="flex w-full items-end">
@@ -797,129 +851,170 @@ function CorrespondenceForm() {
                         setValue={setIdentifiedProblem}
                         error={errors["identified_problem"]}
                         disabled={viewForm}
+                        placeholder="SM's Identified/Expressed Problem or Need"
                     ></TextArea>
                 </section>
 
                 {/* Assessment and Objective */}
-                <section className="flex w-full gap-16">
-                    <TextArea
-                        label="SDW's Assessment"
-                        value={assesment}
-                        setValue={setAssessment}
-                        error={errors["assesment"]}
-                        disabled={viewForm}
-                    ></TextArea>
-                    <TextArea
-                        label="Objective/s"
-                        value={objective}
-                        setValue={setObjective}
-                        error={errors["objective"]}
-                        disabled={viewForm}
-                    ></TextArea>
+                <section
+                    className={
+                        windowWidth <= 800
+                            ? "flex w-full flex-col gap-8"
+                            : "flex w-full items-start justify-center gap-16"
+                    }
+                >
+                    {/* SDW's Assessment */}
+                    <div className="flex flex-col w-full max-w-full">
+                        <label className="header-sm mb-2">SDW's Assessment</label>
+                        <div className="flex w-full ml-auto">
+                            <TextArea
+                                value={assesment}
+                                setValue={setAssessment}
+                                error={errors["assesment"]}
+                                disabled={viewForm}
+                                placeholder="SDW's Assessment"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Objective/s */}
+                    {windowWidth > 800 ? (
+                        <div className="flex flex-col w-full max-w-full">
+                            <label className="header-sm mb-2">Objective/s</label>
+                            <div className="flex w-full ml-auto">
+                                <TextArea
+                                    value={objective}
+                                    setValue={setObjective}
+                                    error={errors["objective"]}
+                                    disabled={viewForm}
+                                    placeholder="Objective/s"
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        // Move below at <=800px
+                        <div className="flex flex-col w-full max-w-full">
+                            <label className="header-sm mb-2">Objective/s</label>
+                            <div className="flex w-full ml-auto">
+                                <TextArea
+                                    value={objective}
+                                    setValue={setObjective}
+                                    error={errors["objective"]}
+                                    disabled={viewForm}
+                                    placeholder="Objective/s"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </section>
 
                 {/* Intervention Plan */}
+                {/* Intervention Plan */}
                 <section className="flex w-full flex-col gap-16">
                     <h3 className="header-md">Intervention Plan</h3>
+
                     <div className="flex flex-col gap-2">
-                        <div className="flex w-full flex-col gap-6 border-b border-[var(--border-color)]">
-                            <div className={`flex justify-between px-4 pr-30 ${viewForm ? 'gap-30' : 'gap-6'}`}>
-                                <p className="label-base w-lg">Actions</p>
-                                <p className="label-base w-sm">Time Frame</p>
-                                <p className="label-base w-lg">Results</p>
-                                <p className="label-base w-lg">
-                                    Person Responsible
-                                </p>
+                        {/* MAIN HEADER (fixed 2x2 positions) */}
+                        <div className="flex w-full flex-col gap-2 border-b border-[var(--border-color)] px-4 pb-4">
+                            <div className="flex justify-between gap-6">
+                                <p className="label-base flex-1">Actions</p>
+                                <p className="label-base flex-1">Time Frame</p>
+                            </div>
+                            <div className="flex justify-between gap-6">
+                                <p className="label-base flex-1">Results</p>
+                                <p className="label-base flex-1">Person Responsible</p>
                             </div>
                         </div>
-                        <div className={`flex flex-col flex-wrap gap-4 ${errors["intervention_plans"] ? "py-12 border rounded-xl border-red-500" : ""}`}>
+
+                        <div
+                            className={`flex flex-col gap-6 ${errors["intervention_plans"] ? "py-12 border rounded-xl border-red-500" : ""
+                                }`}
+                        >
                             {intervention_plans.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="flex w-full justify-between items-center px-4 gap-6"
+                                    className="w-full px-4 py-2 rounded-md border border-transparent hover:border-[var(--border-color)] transition"
                                 >
-                                    <div className="flex w-lg">
-                                        <TextArea
-                                            value={item.action}
-                                            handleChange={(e) => {
-                                                updateIntervention(
-                                                    index,
-                                                    "action",
-                                                    e.target.value,
-                                                );
-                                                handleChange("Intervention Plan")(e);
-                                            }}
-                                            showTime={false}
-                                            error={errors[`intervention_plans_${index}_action`]}
-                                            disabled={viewForm}
-                                        ></TextArea>
+                                    {/* ROW 1: Actions | Time Frame */}
+                                    <div className="flex gap-6 mb-6">
+                                        <div className="flex-1">
+                                            <TextArea
+                                                value={item.action}
+                                                handleChange={(e) => {
+                                                    updateIntervention(index, "action", e.target.value);
+                                                    handleChange("Intervention Plan")(e);
+                                                }}
+                                                showTime={false}
+                                                error={errors[`intervention_plans_${index}_action`]}
+                                                disabled={viewForm}
+                                                placeholder="Actions"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <TextArea
+                                                value={item.time_frame}
+                                                handleChange={(e) => {
+                                                    updateIntervention(index, "time_frame", e.target.value);
+                                                    handleChange("Intervention Plan")(e);
+                                                }}
+                                                showTime={false}
+                                                error={errors[`intervention_plans_${index}_time_frame`]}
+                                                disabled={viewForm}
+                                                placeholder="Time Frame"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex w-sm">
-                                        <TextArea
-                                            value={item.time_frame}
-                                            handleChange={(e) => {
-                                                updateIntervention(
-                                                    index,
-                                                    "time_frame",
-                                                    e.target.value,
-                                                );
-                                                handleChange("Intervention Plan")(e);
-                                            }}
-                                            showTime={false}
-                                            error={errors[`intervention_plans_${index}_time_frame`]}
-                                            disabled={viewForm}
-                                        ></TextArea>
+
+                                    {/* ROW 2: Results | Person Responsible */}
+                                    <div className="flex gap-6">
+                                        <div className="flex-1">
+                                            <TextArea
+                                                value={item.results}
+                                                handleChange={(e) => {
+                                                    updateIntervention(index, "results", e.target.value);
+                                                    handleChange("Intervention Plan")(e);
+                                                }}
+                                                showTime={false}
+                                                error={errors[`intervention_plans_${index}_results`]}
+                                                disabled={viewForm}
+                                                placeholder="Results"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <TextArea
+                                                value={item.person_responsible}
+                                                handleChange={(e) => {
+                                                    updateIntervention(index, "person_responsible", e.target.value);
+                                                    handleChange("Intervention Plan")(e);
+                                                }}
+                                                showTime={false}
+                                                error={errors[`intervention_plans_${index}_person_responsible`]}
+                                                disabled={viewForm}
+                                                placeholder="Person Responsible"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex w-lg">
-                                        <TextArea
-                                            value={item.results}
-                                            handleChange={(e) => {
-                                                updateIntervention(
-                                                    index,
-                                                    "results",
-                                                    e.target.value,
-                                                );
-                                                handleChange("Intervention Plan")(e);
-                                            }}
-                                            showTime={false}
-                                            error={errors[`intervention_plans_${index}_results`]}
-                                            disabled={viewForm}
-                                        ></TextArea>
-                                    </div>
-                                    <div className="flex w-lg">
-                                        <TextArea
-                                            value={item.person_responsible}
-                                            handleChange={(e) => {
-                                                updateIntervention(
-                                                    index,
-                                                    "person_responsible",
-                                                    e.target.value,
-                                                );
-                                                handleChange("Intervention Plan")(e);
-                                            }}
-                                            showTime={false}
-                                            error={errors[`intervention_plans_${index}_person_responsible`]}
-                                            disabled={viewForm}
-                                        ></TextArea>
-                                    </div>
+
                                     {!viewForm && (
-                                        <button
-                                            onClick={() => deleteIntervention(index)}
-                                            className="icon-button-setup trash-button px-10"
-                                        ></button>
+                                        <div className="flex justify-end mt-4">
+                                            <button
+                                                onClick={() => deleteIntervention(index)}
+                                                className="icon-button-setup trash-button px-10"
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             ))}
                         </div>
+
                         {errors["intervention_plans"] && (
-                            <div className="text-red-500 text-sm self-end">
-                                {errors["intervention_plans"]}
-                            </div>
+                            <div className="text-red-500 text-sm self-end">{errors["intervention_plans"]}</div>
                         )}
                         {savedTime && sectionEdited === "Intervention Plan" && (
                             <p className="text-sm self-end mt-2">{savedTime}</p>
                         )}
                     </div>
+
                     {!viewForm && (
                         <button
                             name="add_intervention"
@@ -932,6 +1027,7 @@ function CorrespondenceForm() {
                     )}
                 </section>
 
+
                 {/* Recommendation */}
                 <section className="flex w-full items-end">
                     <TextArea
@@ -941,6 +1037,7 @@ function CorrespondenceForm() {
                         setValue={setRecommendation}
                         error={errors["recommendation"]}
                         disabled={viewForm}
+                        placeholder="Recommendation"
                     ></TextArea>
                 </section>
 

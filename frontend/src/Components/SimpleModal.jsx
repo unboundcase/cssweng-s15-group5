@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // NOTE: imageCenter is an html tag
 export default function SimpleModal({ isOpen, onClose, title, imageCenter,
   bodyText, confirm = false, onConfirm, onCancel }) {
-  // if (!isOpen) return null;
+  
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isSmallScreen = windowWidth <= 800;
+  const modalClasses = isSmallScreen 
+    ? "relative bg-white rounded-lg drop-shadow-card w-[calc(100%-4rem)] max-w-[90vw] min-h-[30rem] z-10 overflow-hidden flex flex-col mx-8"
+    : "relative bg-white rounded-lg drop-shadow-card max-w-[80rem] w-full min-h-[30rem] z-10 overflow-hidden flex flex-col";
+  
   return (
     <AnimatePresence>
       {isOpen && (<motion.div
@@ -16,7 +31,7 @@ export default function SimpleModal({ isOpen, onClose, title, imageCenter,
 
         <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
 
-        <div className="relative bg-white rounded-lg drop-shadow-card max-w-[80rem] w-full min-h-[30rem] z-10 overflow-hidden flex flex-col">
+        <div className={modalClasses}>
           <div className='w-full p-5 drop-shadow-base' style={{ backgroundColor: "var(--accent-white)" }}>
             <h2 className="header-sub">{title}</h2>
           </div>

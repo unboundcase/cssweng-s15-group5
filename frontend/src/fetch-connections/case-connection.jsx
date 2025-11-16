@@ -614,3 +614,29 @@ export const fetchCasebySDW = async(sdwID) => {
           throw error;
      }
 };
+
+/**
+ * Deletes multiple clients by their IDs
+ * @param {Array<string>} clientIDs Array of client ObjectIds
+ * @returns {Promise<{ok: boolean, deletedCount: number}>}
+ */
+export const deleteClients = async (clientIDs) => {
+  try {
+    const response = await fetch(`${apiUrl}/cases/delete-multiple`, {
+      method: 'PUT', // or DELETE if the backend in charge prefers
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ ids: clientIDs }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete clients');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting clients:', error);
+    throw error;
+  }
+};

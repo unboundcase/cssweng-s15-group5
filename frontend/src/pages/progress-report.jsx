@@ -80,6 +80,14 @@ function ProgressReport() {
     // < START :: Auto-Filled Data > //
 
     const viewForm = action !== 'create' ? true : false;
+    const [windowWidth, setWindowWidth] = useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+    useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
 
     useEffect(() => {
         setLoadingStage(0);
@@ -467,7 +475,7 @@ function ProgressReport() {
 
         setModalTitle("Confirm Creation");
         setModalBody("Are you sure you want to save this Progress Report? This cannot be edited or deleted after creation.");
-        setModalImageCenter(<div className="info-icon mx-auto" />);
+        setModalImageCenter(<div className="warning-icon mx-auto" />);
         setModalConfirm(true);
         setModalOnConfirm(() => async () => {
             setShowModal(false);
@@ -797,54 +805,79 @@ function ProgressReport() {
                             <div className="flex border-b border-[var(--border-color)]">
                                 <h4 className="header-sm">Sponsored Member</h4>
                             </div>
-                            <div className="inline-flex items-center justify-center gap-16">
-                                <div className="flex flex-col gap-8">
+
+                            <div
+                                className={
+                                    windowWidth <= 800
+                                        ? "flex flex-col gap-8" // stack vertically
+                                        : "flex flex-row w-full gap-16"
+                                }
+                            >
+                                {/* LEFT COLUMN */}
+                                <div className="flex flex-col gap-8 flex-1">
                                     <TextInput
                                         label="Last Name"
                                         value={last_name}
                                         disabled={true}
+                                        placeholder="Last Name"
                                     ></TextInput>
                                     <TextInput
                                         label="First Name"
                                         value={first_name}
                                         disabled={true}
+                                        placeholder="First Name"
                                     ></TextInput>
                                     <TextInput
                                         label="Middle Name"
                                         value={middle_name}
                                         disabled={true}
+                                        placeholder="Middle Name"
                                     ></TextInput>
                                 </div>
-                                <div className="flex flex-col gap-8">
+
+                                {/* RIGHT COLUMN */}
+                                <div className="flex flex-col gap-8 flex-1">
                                     <TextInput
                                         label="CH ID #"
                                         value={ch_number}
                                         disabled={true}
+                                        placeholder="CH ID #"
                                     ></TextInput>
                                     <DateInput
                                         label="Date of Birth"
                                         value={dob}
                                         disabled={true}
+                                        placeholder="Date of Birth"
                                     ></DateInput>
                                     <TextInput
                                         label="Age"
                                         value={age}
                                         disabled={true}
+                                        placeholder="Age"
                                     ></TextInput>
                                 </div>
                             </div>
                         </div>
+
                         <div className="flex w-full flex-col gap-8 rounded-[0.8rem] border border-[var(--border-color)] p-8">
                             <div className="flex border-b border-[var(--border-color)]">
                                 <h4 className="header-sm">General Information</h4>
                             </div>
-                            <div className="inline-flex items-start justify-center gap-16">
-                                <div className="flex flex-col gap-8">
+                            <div
+                                className={
+                                    windowWidth <= 1000
+                                        ? "flex flex-col items-stretch gap-8"
+                                        : "flex flex-row w-full gap-16"
+                                }
+                            >
+                                {/* LEFT COLUMN */}
+                                <div className="flex flex-col gap-8 flex-1">
                                     <TextInput
                                         label="Sub-Project"
                                         value={subproject}
                                         disabled={true}
-                                    ></TextInput>
+                                        placeholder="Sub-Project"
+                                    />
                                     <DateInput
                                         label="Date Accomplished"
                                         value={date_accomplished}
@@ -852,7 +885,8 @@ function ProgressReport() {
                                         handleChange={handleChange("General Information")}
                                         error={errors["date_accomplished"]}
                                         disabled={viewForm}
-                                    ></DateInput>
+                                        placeholder="Date Accomplished"
+                                    />
                                     <TextInput
                                         label="Period Covered"
                                         value={period_covered}
@@ -860,9 +894,11 @@ function ProgressReport() {
                                         handleChange={handleChange("General Information")}
                                         error={errors["period_covered"]}
                                         disabled={viewForm}
-                                    ></TextInput>
+                                        placeholder="Period Covered"
+                                    />
                                 </div>
-                                <div className="flex flex-col gap-8">
+                                {/* RIGHT COLUMN */}
+                                <div className="flex flex-col gap-8 flex-1">
                                     <TextInput
                                         label="Name of Sponsor"
                                         value={sponsor_name}
@@ -870,7 +906,8 @@ function ProgressReport() {
                                         handleChange={handleChange("General Information")}
                                         error={errors["sponsor_name"]}
                                         disabled={viewForm}
-                                    ></TextInput>
+                                        placeholder="Name of Sponsor"
+                                    />
                                     <DateInput
                                         label="Sponsorship Begin Date"
                                         value={sponsorship_date}
@@ -878,9 +915,11 @@ function ProgressReport() {
                                         handleChange={handleChange("General Information")}
                                         error={errors["sponsorship_date"]}
                                         disabled={viewForm}
-                                    ></DateInput>
+                                        placeholder="Sponsorship Begin Date"
+                                    />
                                 </div>
                             </div>
+
                             {savedTime && sectionEdited === "General Information" && (
                                 <p className="text-sm self-end mt-2">{savedTime}</p>
                             )}
@@ -889,30 +928,65 @@ function ProgressReport() {
 
                     {/* Update/Developmert */}
                     <section className="flex w-full flex-col gap-16">
-                        <div className="flex w-full flex-col gap-3">
-                            <h3 className="header-md">Update/Development</h3>
-                            <h4 className="text-3xl italic">
-                                e.g. Education, Health, Socio-Economic, Behavioral,
-                                Social, etc.
-                            </h4>
-                        </div>
-                        <div className="flex w-full gap-16">
-                            <TextArea
-                                label="Sponsored Member (Observation)"
-                                value={sm_update}
-                                setValue={setSMUpdate}
-                                error={errors["sm_update"]}
-                                disabled={viewForm}
-                            ></TextArea>
-                            <TextArea
-                                label="Family"
-                                value={family_update}
-                                setValue={setFamilyUpdate}
-                                error={errors["family_update"]}
-                                disabled={viewForm}
-                            ></TextArea>
-                        </div>
-                    </section>
+  {/* Header */}
+  <div className="flex w-full flex-col gap-3">
+    <h3 className="header-md">Update/Development</h3>
+    <h4 className="text-3xl italic">
+      e.g. Education, Health, Socio-Economic, Behavioral, Social, etc.
+    </h4>
+  </div>
+
+  {windowWidth <= 800 ? (
+    // Mobile: stack each field vertically
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <label className="label-base">Sponsored Member (Observation)</label>
+        <TextArea
+          value={sm_update}
+          setValue={setSMUpdate}
+          error={errors["sm_update"]}
+          disabled={viewForm}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="label-base">Family</label>
+        <TextArea
+          value={family_update}
+          setValue={setFamilyUpdate}
+          error={errors["family_update"]}
+          disabled={viewForm}
+        />
+      </div>
+    </div>
+  ) : (
+    // Desktop: 2x2 grid (labels row, inputs row) keeps alignment even if a label wraps
+    <div className="grid grid-cols-2 gap-x-16 gap-y-3">
+      {/* Row 1: labels */}
+      <label className="header-sm">Sponsored Member (Observation)</label>
+      <label className="header-sm">Family</label>
+
+      {/* Row 2: inputs */}
+      <div>
+        <TextArea
+          value={sm_update}
+          setValue={setSMUpdate}
+          error={errors["sm_update"]}
+          disabled={viewForm}
+        />
+      </div>
+      <div>
+        <TextArea
+          value={family_update}
+          setValue={setFamilyUpdate}
+          error={errors["family_update"]}
+          disabled={viewForm}
+        />
+      </div>
+    </div>
+  )}
+</section>
+
 
                     {/* Services to Family */}
                     <section className="flex w-full">

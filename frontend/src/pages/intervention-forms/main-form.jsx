@@ -56,6 +56,17 @@ function InterventionForm() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
 
+    const [windowWidth, setWindowWidth] = useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+
+    useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
+
+
     useEffect(() => {
         const loadSessionAndCase = async () => {
             try {
@@ -107,35 +118,47 @@ function InterventionForm() {
     }
 
     return (
-        <main className="flex w-full flex-col items-center justify-center gap-16 rounded-lg p-16">
-            <section className="flex w-full justify-between">
-                <h3 className="header-md self-start">
-                    Intervention/Helping Plan
-                </h3>
-                <select
-                    name="services"
-                    id="services"
-                    value={intervention_selected}
-                    onChange={(e) => {
-                        setInterventionSelected(e.target.value);
-                        {/*handleSelectIntervention(e.target.value);*/ }
-                    }}
-                    className="label-base text-input max-w-96"
-                >
-                    <option value="" className="body-base">
-                        Select Intervention
-                    </option>
-                    {interventions.map((intervention, index) => (
-                        <option
-                            key={index}
-                            value={intervention.name}
-                            className="body-base"
-                        >
-                            {intervention.name}
-                        </option>
-                    ))}
-                </select>
-            </section>
+<main
+  className={`flex w-full flex-col items-center justify-center gap-16 rounded-lg ${
+    windowWidth <= 800 ? "p-2" : "p-16"
+  }`}
+>
+<section
+  className={
+    windowWidth <= 800
+      ? "flex w-full flex-col items-start gap-4"
+      : "flex w-full justify-between items-center"
+  }
+>
+  <h3 className="header-md self-start">Intervention/Helping Plan</h3>
+
+  <select
+    name="services"
+    id="services"
+    value={intervention_selected}
+    onChange={(e) => {
+      setInterventionSelected(e.target.value);
+      // handleSelectIntervention(e.target.value);
+    }}
+    className={`label-base text-input max-w-96 ${
+      windowWidth <= 800 ? "ml-auto" : ""
+    }`}
+  >
+    <option value="" className="body-base">
+      Select Intervention
+    </option>
+    {interventions.map((intervention, index) => (
+      <option
+        key={index}
+        value={intervention.name}
+        className="body-base"
+      >
+        {intervention.name}
+      </option>
+    ))}
+  </select>
+</section>
+
 
             <section className="flex w-full justify-center">
                 {intervention_selected === "Home Visitation" && (

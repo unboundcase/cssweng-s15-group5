@@ -53,6 +53,7 @@ export default function WorkerProfile() {
         role: "",
         manager: "",
         is_active: true,
+        createdAt: null,
     });
 
     const [drafts, setDrafts] = useState({
@@ -75,6 +76,17 @@ export default function WorkerProfile() {
     const [projectLocation, setProjectLocation] = useState([])
     const [notFound, setNotFound] = useState(false);
 
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+    const isTwoColumnLayout = windowWidth <= 850;
+    const isOneColumnLayout = windowWidth <= 380;
+    const hideSpuColumn = windowWidth <= 800;
+    const hideTypeColumn = windowWidth <= 400;
+    const hideCHColumn = windowWidth <= 800;
+    const hideSDWColumn = windowWidth <= 380;
+    const isFormTwoColumn = windowWidth <= 900;
+    const isFormTwoColumnTop = windowWidth <= 500;
+
     useEffect(() => {
         if (data.first_name || data.last_name) {
             document.title = `${data.first_name} ${data.last_name} | Worker Profile`;
@@ -83,6 +95,14 @@ export default function WorkerProfile() {
         }
     }, [data.first_name, data.middle_name, data.last_name]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const loadSessionAndWorker = async () => {
@@ -119,7 +139,8 @@ export default function WorkerProfile() {
                     spu_id: empData.spu_id?._id || empData.spu_id || "",
                     role: empData.role || "",
                     manager: empData.manager || "",
-                    is_active: empData.is_active ?? true
+                    is_active: empData.is_active ?? true,
+                    createdAt: empData.createdAt ? new Date(empData.createdAt) : null
                 });
                 setDrafts({
                     first_name: empData.first_name || "",
@@ -551,7 +572,7 @@ export default function WorkerProfile() {
                         }}
                     />
 
-                    <main className="flex flex-col gap-20 pt-15">
+                    <main className="flex flex-col gap-20 pt-15 p-5">
                         <div className="w-full max-w-[1280px] mx-auto flex justify-between items-center bg-white py-3">
                             <button
                                 className="flex items-center gap-5 py-2 font-bold-label arrow-group"
@@ -598,47 +619,97 @@ export default function WorkerProfile() {
                                             />
                                         </div>
 
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label">Middle Name</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Middle Name"
-                                                value={drafts.middle_name}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, middle_name: e.target.value }))
-                                                }
-                                                className="text-input font-label w-full"
-                                            />
-                                        </div>
+                                        {!isFormTwoColumnTop && (
+                                            <>
+                                                <div className="flex flex-col w-full">
+                                                    <label className="font-bold-label">Middle Name</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Middle Name"
+                                                        value={drafts.middle_name}
+                                                        onChange={(e) =>
+                                                            setDrafts((prev) => ({ ...prev, middle_name: e.target.value }))
+                                                        }
+                                                        className="text-input font-label w-full"
+                                                    />
+                                                </div>
 
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Last Name</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Last Name"
-                                                value={drafts.last_name}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, last_name: e.target.value }))
-                                                }
-                                                className="text-input font-label w-full"
-                                            />
-                                        </div>
+                                                <div className="flex flex-col w-full">
+                                                    <label className="font-bold-label"><span className='text-red-500'>*</span> Last Name</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Last Name"
+                                                        value={drafts.last_name}
+                                                        onChange={(e) =>
+                                                            setDrafts((prev) => ({ ...prev, last_name: e.target.value }))
+                                                        }
+                                                        className="text-input font-label w-full"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {isFormTwoColumnTop && (
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label">Middle Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Middle Name"
+                                                    value={drafts.middle_name}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, middle_name: e.target.value }))
+                                                    }
+                                                    className="text-input font-label w-full"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {isFormTwoColumnTop && (
+                                        <div className="flex gap-5 w-full mt-5">
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label"><span className='text-red-500'>*</span> Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Last Name"
+                                                    value={drafts.last_name}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, last_name: e.target.value }))
+                                                    }
+                                                    className="text-input font-label w-full"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label"><span className='text-red-500'>*</span> Username</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Username"
+                                                    value={drafts.username}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, username: e.target.value }))
+                                                    }
+                                                    className="text-input font-label w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* === Row 2 === */}
                                     <div className="flex gap-5 w-full mt-5">
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Username</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Username"
-                                                value={drafts.username}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, username: e.target.value }))
-                                                }
-                                                className="text-input font-label w-full"
-                                            />
-                                        </div>
+                                        {!isFormTwoColumnTop && (
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label"><span className='text-red-500'>*</span> Username</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Username"
+                                                    value={drafts.username}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, username: e.target.value }))
+                                                    }
+                                                    className="text-input font-label w-full"
+                                                />
+                                            </div>
+                                        )}
 
                                         <div className="flex flex-col w-full">
                                             <label className="font-bold-label"><span className='text-red-500'>*</span> Email</label>
@@ -667,91 +738,83 @@ export default function WorkerProfile() {
                                         </div>
                                     </div>
 
-                                    {/* === Row 3 === */}
-                                    <div className="flex gap-5 w-full mt-5">
-                                        {/* <div className="flex flex-col w-full">
-                                    <label className="font-bold-label"><span className='text-red-500'>*</span> SDW ID</label>
-                                    <input
-                                        type="text"
-                                        value={drafts.sdw_id}
-                                        onChange={(e) =>
-                                            setDrafts((prev) => ({ ...prev, sdw_id: e.target.value }))
-                                        }
-                                        className="text-input font-label w-full"
-                                    />
-                                </div> */}
-
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> SPU Project</label>
-                                            <select
-                                                disabled={!(user?.role === "head" || user?._id === data.manager)}
-                                                className="text-input font-label"
-                                                value={drafts.spu_id}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, spu_id: e.target.value }))
-                                                }
-                                            >
-                                                <option value="">Select SPU</option>
-                                                {projectLocation.map((spu) => (
-                                                    <option key={spu._id} value={spu._id}>
-                                                        {spu.spu_name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label">Area of Assignment</label>
-                                            <input
-                                                type="text"
-                                                value={drafts.area}
-                                                placeholder="Area of Assignment"
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, area: e.target.value }))
-                                                }
-                                                className="text-input font-label w-full"
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Role</label>
-                                            <select
-                                                disabled={user?.role !== "head"}
-                                                className="text-input font-label"
-                                                value={drafts.role}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, role: e.target.value }))
-                                                }
-                                            >
-                                                <option value="">Select Role</option>
-                                                {user?.role == "head" && <option value="head">Head</option>}
-                                                <option value="supervisor">Supervisor</option>
-                                                <option value="sdw">Social Development Worker</option>
-                                            </select>
-                                        </div>
-
-                                        {(drafts.role === "" || drafts.role === "sdw") && (<div className="flex flex-col w-full">
-                                            <label className="font-bold-label">Manager</label>
-                                            <select
-                                                disabled={!(user?.role === "head" || user?._id === data.manager)}
-                                                className="text-input font-label"
-                                                value={drafts.manager}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({ ...prev, manager: e.target.value }))
-                                                }
-                                            >
-                                                <option value="">Select Manager</option>
-                                                {(drafts.role === "sdw" ? supervisors : socialDevelopmentWorkers).map(
-                                                    (person) => (
-                                                        <option key={person._id || person.id} value={person._id || person.id}>
-                                                            {person.username
-                                                                ? person.username
-                                                                : `${person.first_name} ${person.middle_name || ""} ${person.last_name}`}
+                                    {/* === Row 3 - Responsive 2 columns at 900px === */}
+                                    <div className={`gap-5 w-full mt-5 ${isFormTwoColumn ? 'flex flex-col' : 'flex'}`}>
+                                        <div className={`flex gap-5 ${isFormTwoColumn ? 'w-full' : 'w-1/2'}`}>
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label"><span className='text-red-500'>*</span> SPU Project</label>
+                                                <select
+                                                    disabled={!(user?.role === "head" || user?._id === data.manager)}
+                                                    className="text-input font-label"
+                                                    value={drafts.spu_id}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, spu_id: e.target.value }))
+                                                    }
+                                                >
+                                                    <option value="">Select SPU</option>
+                                                    {projectLocation.map((spu) => (
+                                                        <option key={spu._id} value={spu._id}>
+                                                            {spu.spu_name}
                                                         </option>
-                                                    )
-                                                )}
-                                            </select>
-                                        </div>)}
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label">Area of Assignment</label>
+                                                <input
+                                                    type="text"
+                                                    value={drafts.area}
+                                                    placeholder="Area of Assignment"
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, area: e.target.value }))
+                                                    }
+                                                    className="text-input font-label w-full"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className={`flex gap-5 ${isFormTwoColumn ? 'w-full' : 'w-1/2'}`}>
+                                            <div className="flex flex-col w-full">
+                                                <label className="font-bold-label"><span className='text-red-500'>*</span> Role</label>
+                                                <select
+                                                    disabled={user?.role !== "head"}
+                                                    className="text-input font-label"
+                                                    value={drafts.role}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, role: e.target.value }))
+                                                    }
+                                                >
+                                                    <option value="">Select Role</option>
+                                                    {user?.role == "head" && <option value="head">Head</option>}
+                                                    <option value="supervisor">Supervisor</option>
+                                                    <option value="sdw">Social Development Worker</option>
+                                                </select>
+                                            </div>
+
+                                            {(drafts.role === "" || drafts.role === "sdw") && (<div className="flex flex-col w-full">
+                                                <label className="font-bold-label">Manager</label>
+                                                <select
+                                                    disabled={!(user?.role === "head" || user?._id === data.manager)}
+                                                    className="text-input font-label"
+                                                    value={drafts.manager}
+                                                    onChange={(e) =>
+                                                        setDrafts((prev) => ({ ...prev, manager: e.target.value }))
+                                                    }
+                                                >
+                                                    <option value="">Select Manager</option>
+                                                    {(drafts.role === "sdw" ? supervisors : socialDevelopmentWorkers).map(
+                                                        (person) => (
+                                                            <option key={person._id || person.id} value={person._id || person.id}>
+                                                                {person.username
+                                                                    ? person.username
+                                                                    : `${person.first_name} ${person.middle_name || ""} ${person.last_name}`}
+                                                            </option>
+                                                        )
+                                                    )}
+                                                </select>
+                                            </div>)}
+                                        </div>
                                     </div>
 
                                     <button
@@ -896,12 +959,14 @@ export default function WorkerProfile() {
                                     </div>
 
 
-                                    <div className="font-label grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3">
+                                    <div className={`font-label grid gap-x-10 gap-y-6 ${isOneColumnLayout ? 'grid-cols-1' : isTwoColumnLayout ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
                                         <p><span className="font-bold-label">Username:</span> {data.username || "-"}</p>
                                         <p><span className="font-bold-label">Email:</span> {data.email || "-"}</p>
-                                        <p><span className="font-bold-label">Contact No.:</span> {data.contact_no || "-"}</p>
+                                        
+                                        {!isTwoColumnLayout && !isOneColumnLayout && (
+                                            <p><span className="font-bold-label">Contact No.:</span> {data.contact_no || "-"}</p>
+                                        )}
 
-                                        {/* <p><span className="font-bold-label">SDW ID:</span> {data.sdw_id || "-"}</p> */}
                                         <p>
                                             <span className="font-bold-label">SPU Project:</span>{" "}
                                             {projectLocation.find((spu) => spu._id === data.spu_id)?.spu_name || "-"}
@@ -920,7 +985,21 @@ export default function WorkerProfile() {
                                                     : "-"}
                                             </p>
                                         )}
-
+                                        {data.createdAt && (
+                                        <p>
+                                        <span className="font-bold-label">Account Created:</span>{" "}
+                                                {data.createdAt.toLocaleDateString('en-PH', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </p>
+                                        )}
+                                        {(isTwoColumnLayout || isOneColumnLayout) && (
+                                            <p><span className="font-bold-label">Contact No.:</span> {data.contact_no || "-"}</p>
+                                        )}
                                     </div>
                                 </>
                             )}
@@ -931,10 +1010,10 @@ export default function WorkerProfile() {
                                 <>
                                     <h2 className="header-sub">Clients Assigned</h2>
 
-                                    <div className="grid grid-cols-[2fr_1fr_2fr] items-center border-b border-gray-400 pb-2 mb-2">
+                                    <div className={`${hideSDWColumn ? 'grid grid-cols-[1fr]' : hideCHColumn ? 'grid grid-cols-[2fr_2fr]' : 'grid grid-cols-[2fr_1fr_2fr]'} items-center border-b border-gray-400 pb-2 mb-2`}>
                                         <p className="font-bold-label ml-[20%]">Name</p>
-                                        <p className="font-bold-label text-center">CH Number</p>
-                                        <p className="font-bold-label text-center">SDW Assigned</p>
+                                        {!hideCHColumn && !hideSDWColumn && <p className="font-bold-label text-center">CH Number</p>}
+                                        {!hideSDWColumn && <p className="font-bold-label text-center">SDW Assigned</p>}
                                     </div>
 
                                     {handledClients.length === 0 ? (
@@ -950,6 +1029,8 @@ export default function WorkerProfile() {
                                                 assigned_sdw_name={client.assigned_sdw_name}
                                                 pendingTermination={client.pendingTermination}
                                                 archive={!client.is_active}
+                                                hideCHColumn={hideCHColumn}
+                                                hideSDWColumn={hideSDWColumn}
                                             />
                                         ))
                                     )}
@@ -962,10 +1043,10 @@ export default function WorkerProfile() {
                                         {data.role === "head" ? "Workers in SPU" : "Workers Supervised"}
                                     </h2>
 
-                                    <div className="grid grid-cols-[2fr_1fr_2fr] items-center border-b border-gray-400 pb-2 mb-2">
+                                    <div className={`${hideTypeColumn ? 'grid grid-cols-[1fr]' : hideSpuColumn ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-cols-[2fr_1fr_2fr]'} items-center border-b border-gray-400 pb-2 mb-2`}>
                                         <p className="font-bold-label ml-[20%]">Worker</p>
-                                        <p className="font-bold-label text-center">Type</p>
-                                        <p className="font-bold-label text-center">SPU</p>
+                                        {!hideTypeColumn && <p className="font-bold-label text-center">Type</p>}
+                                        {!hideSpuColumn && !hideTypeColumn && <p className="font-bold-label text-center">SPU</p>}
                                     </div>
 
                                     {handledWorkers.length === 0 ? (
@@ -975,13 +1056,14 @@ export default function WorkerProfile() {
                                             <WorkerEntry
                                                 key={worker.id}
                                                 id={worker.id}
-                                                // sdw_id={worker.sdw_id}
                                                 name={
                                                     worker.name ||
                                                     `${worker.first_name} ${worker.middle_name || ""} ${worker.last_name}`
                                                 }
                                                 role={worker.role}
                                                 spu_id={worker.spu_id}
+                                                hideSpuColumn={hideSpuColumn}
+                                                hideTypeColumn={hideTypeColumn}
                                             />
                                         ))
                                     )}

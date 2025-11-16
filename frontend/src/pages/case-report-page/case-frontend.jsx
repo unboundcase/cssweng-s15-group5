@@ -92,7 +92,6 @@ function CaseFrontend({ creating = false }) {
         assigned_sdw: "",
         spu: "",
         classifications: "",
-
         pendingTermination: false
     });
 
@@ -256,6 +255,7 @@ function CaseFrontend({ creating = false }) {
             assessment: data.assessment || "",
             recommendation: data.recommendation || "",
             evaluation: data.evaluation || "",
+            
         });
         setEditingField(null);
     };
@@ -296,7 +296,7 @@ function CaseFrontend({ creating = false }) {
             const sessionData = await fetchSession();
             const currentUser = sessionData?.user || null;
             setUser(currentUser);
-            
+
             // Immediately set unauthorized if no user is found
             if (!currentUser) {
                 setUnauthorized(true);
@@ -659,6 +659,9 @@ function CaseFrontend({ creating = false }) {
 
     const [home_visitations, setHomeVisitations] = useState([]);
     useEffect(() => {
+        // Skip loading intervention data when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedHomeVisitData = await fetchAllHomeVisitForms(clientId);
             // console.log("Fetched Home Visit: ", fetchedHomeVisitData);
@@ -691,10 +694,13 @@ function CaseFrontend({ creating = false }) {
             setHomeVisitations(homeVisitInterventions);
         };
         loadData();
-    }, []);
+    }, [creating]);
 
     const [counselings, setCounselings] = useState([]);
     useEffect(() => {
+        // Skip loading intervention data when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedCounselingData = await fetchAllCounselingInterventionsByMemberId(clientId);
             //console.log("Fetched Counseling: ", fetchedCounselingData);
@@ -728,10 +734,13 @@ function CaseFrontend({ creating = false }) {
             setCounselings(counselingInterventions);
         };
         loadData();
-    }, []);
+    }, [creating]);
 
     const [financial_assistances, setFinancialAssistances] = useState([]);
     useEffect(() => {
+        // Skip loading intervention data when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedFinancialData = await fetchAllFinInterventions(clientId);
             //console.log("Fetched Financial: ", fetchedFinancialData);
@@ -765,10 +774,13 @@ function CaseFrontend({ creating = false }) {
             setFinancialAssistances(financialInterventions);
         };
         loadData();
-    }, []);
+    }, [creating]);
 
     const [correspondences, setCorrespondences] = useState([]);
     useEffect(() => {
+        // Skip loading intervention data when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedCorrespondenceData = await fetchAllCorrespInterventions(clientId);
             //console.log("Fetched Correspondence: ", fetchedCorrespondenceData);
@@ -802,7 +814,7 @@ function CaseFrontend({ creating = false }) {
             setCorrespondences(correspondenceInterventions);
         };
         loadData();
-    }, []);
+    }, [creating]);
 
     const interventions = {
         "Home Visitation": home_visitations,
@@ -814,6 +826,9 @@ function CaseFrontend({ creating = false }) {
     const [progress_reports, setProgressReports] = useState([]);
 
     useEffect(() => {
+        // Skip loading progress reports when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedProgressData = await fetchProgressReportsForCase(clientId);
             //console.log("Fetched Progress Reports: ", fetchedProgressData);
@@ -841,11 +856,14 @@ function CaseFrontend({ creating = false }) {
         };
 
         loadData();
-    }, []);
+    }, [creating]);
 
     const [caseClosureForm, setCaseClosureForm] = useState(null);
 
     useEffect(() => {
+        // Skip loading case closure data when creating a new case
+        if (creating) return;
+        
         const loadData = async () => {
             const fetchedClosureForm = await fetchCaseClosureData(clientId);
             // console.log("Fetched Closure Form: ", fetchedClosureForm);
@@ -859,7 +877,7 @@ function CaseFrontend({ creating = false }) {
         };
 
         loadData();
-    }, []);
+    }, [creating]);
 
     const handleNewIntervention = (caseID) => {
         const path = `/intervention-form/?action=create&caseID=${caseID}`;
@@ -947,7 +965,8 @@ function CaseFrontend({ creating = false }) {
 
         setModalTitle("Confirm Creation");
         setModalBody("Are you sure you want to create this client? Important fields will no longer become editable once created. Once made, cases can no longer be deleted.");
-        setModalImageCenter(<div className="info-icon mx-auto" />);
+        setModalImageCenter(<div className="warning-icon mx-auto" />);
+        setModalImageCenter(<div className="warning-icon mx-auto" />);
         setModalConfirm(true);
         setModalOnConfirm(() => async () => {
             const payload = {
@@ -1003,7 +1022,7 @@ function CaseFrontend({ creating = false }) {
         } catch (error) {
             setModalTitle("Update Error");
             setModalBody(error.message || "An unexpected error occurred.");
-            setModalImageCenter(<div className="warning-icon mx-auto" />);
+            setModalImageCenter(<div className="warning-icon mx-auto"></div>);
             setModalConfirm(false);
             setShowModal(true);
         }
@@ -1037,11 +1056,11 @@ function CaseFrontend({ creating = false }) {
             const assignedSDW = socialDevelopmentWorkers.find(
                 w => w._id === assignedSDWId || w.id === assignedSDWId
             );
-                        
+
             // Allow access if supervisor's SPU matches case's SPU
-            console.log("SUPERVISOR CHECK", user.spu_id, data.spu);
+            // console.log("SUPERVISOR CHECK", user.spu_id, data.spu);
             if (user.spu_id === data.spu) {
-                console.log("Supervisor can view archived case in their SPU");
+                // console.log("Supervisor can view archived case in their SPU");
                 canViewArchivedInSPU = true;
             }
         }
@@ -1071,17 +1090,30 @@ function CaseFrontend({ creating = false }) {
         }
     }, [loadingComplete]);
 
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+    const isFormTwoColumn = windowWidth <= 600;
+    const isFormAdjustedRatio = windowWidth <= 780;
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (!loadingComplete) {
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center">
-              <div className="flex items-center gap-10">
-            <p style={{ color: "var(--color-black)" }} className="header-main">
-                Loading...
-            </p>
-            <div
-                className="loader-conic"
-            ></div>
-        </div>
+                <div className="flex items-center gap-10">
+                    <p style={{ color: "var(--color-black)" }} className="header-main">
+                        Loading...
+                    </p>
+                    <div
+                        className="loader-conic"
+                    ></div>
+                </div>
                 {/* --- Timeout warning message --- */}
                 {showTimeoutWarning && (
                     <div className="mt-8 text-center font-label">
@@ -1140,7 +1172,10 @@ function CaseFrontend({ creating = false }) {
                         }}
                     />
 
-                    <main className="flex flex-col gap-20 py-15">
+                    <main className="flex flex-col gap-20 py-15"
+                        style={{
+                            paddingInline: windowWidth <= 480 ? "2rem" : "0", // 3 rem side padding below 480 px
+                        }}>
                         {/* <div className='flex flex-1 top-0 justify-between fixed bg-white z-98 max-w-[1280px] py-3 mx-auto'> */}
                         <div className="fixed top-0 right-0 left-0 z-50 mx-auto flex w-full max-w-[1280px] items-center justify-between bg-white px-4 py-3">
                             <button
@@ -1204,329 +1239,401 @@ function CaseFrontend({ creating = false }) {
                             </div>
                         </div>
 
-                        <section className="flex flex-col gap-5" id="core-fields">
-                            {!creating &&
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        {data.is_active === true ? (
-                                            <div className="font-bold-label rounded-full bg-[var(--color-green)] p-2 px-8 !text-white">
-                                                Active
-                                            </div>
-                                        ) : (
-                                            <div className="font-bold-label rounded-full bg-[var(--accent-dark)] p-2 px-8 !text-white">
-                                                Inactive
-                                            </div>
-                                        )}
 
-                                        {data.pendingTermination && (
-                                            <div className="font-bold-label rounded-full bg-red-600 p-2 px-8 !text-white">
-                                                Pending Termination
-                                            </div>
-                                        )}
-                                    </div>
 
+
+
+
+
+
+
+
+
+<section className="grid gap-6" id="core-fields">
+  {/* STATUS + DOWNLOAD */}
+  {!creating && (
+    <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+      <div className="grid auto-cols-max grid-flow-col gap-3">
+        {data.is_active ? (
+          <div className="font-bold-label rounded-full bg-[var(--color-green)] p-2 px-8 !text-white">
+            Active
+          </div>
+        ) : (
+          <div className="font-bold-label rounded-full bg-[var(--accent-dark)] p-2 px-8 !text-white">
+            Inactive
+          </div>
+        )}
+
+        {data.pendingTermination && (
+          <div className="font-bold-label rounded-full bg-red-600 p-2 px-8 !text-white">
+            Pending Termination
+          </div>
+        )}
+      </div>
+
+      <button
+        className="btn-blue font-bold-label drop-shadow-base justify-self-end"
+        data-cy="download-case"
+        onClick={() => generateCaseReport(clientId)}
+      >
+        Download
+      </button>
+    </div>
+  )}
+
+  {/* HEADER ROW */}
+  {(editingField === "all" || editingField === "core-fields") && (
+    <div className="grid grid-cols-[1fr_auto] items-center">
+      <h1 className="header-main">Core Details</h1>
+      {!creating && (
+        <button
+          className={
+            editingField === "core-fields"
+              ? "icon-button-setup x-button"
+              : "icon-button-setup dots-button"
+          }
+          onClick={() => {
+            if (editingField) {
+              resetFields();
+            } else {
+              setEditingField("core-fields");
+            }
+          }}
+        />
+      )}
+    </div>
+  )}
+
+  {/* EDIT / CREATE MODE */}
+  {(editingField === "all" || editingField === "core-fields") ? (
+    <>
+      {/* Names */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid gap-2 min-w-0">
+          <label className="font-bold-label">
+            <span className="text-red-500">*</span> First Name
+          </label>
+          <input
+            disabled={!creating}
+            type="text"
+            value={drafts.first_name}
+            placeholder="First Name"
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, first_name: e.target.value }))
+            }
+            className="text-input font-label w-full min-w-0"
+            data-cy="fname"
+          />
+        </div>
+
+        <div className="grid gap-2 min-w-0">
+          <label className="font-bold-label">Middle Name</label>
+          <input
+            disabled={!creating}
+            type="text"
+            value={drafts.middle_name}
+            placeholder="Middle Name"
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, middle_name: e.target.value }))
+            }
+            className="text-input font-label w-full min-w-0"
+            data-cy="mname"
+          />
+        </div>
+
+        <div className="grid gap-2 min-w-0">
+          <label className="font-bold-label">
+            <span className="text-red-500">*</span> Last Name
+          </label>
+          <input
+            disabled={!creating}
+            type="text"
+            value={drafts.last_name}
+            placeholder="Last Name"
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, last_name: e.target.value }))
+            }
+            className="text-input font-label w-full min-w-0"
+            data-cy="lname"
+          />
+        </div>
+      </div>
+
+      {/* CH Number */}
+      <div className="grid gap-2 w-full">
+        <label className="font-bold-label">
+          <span className="text-red-500">*</span> CH Number
+        </label>
+        <input
+          disabled={!creating}
+          type="text"
+          value={drafts.sm_number}
+          placeholder="CH Number"
+          onChange={(e) =>
+            setDrafts((p) => ({ ...p, sm_number: e.target.value }))
+          }
+          className="text-input font-label w-full max-w-[30rem]"
+          data-cy="sm-number"
+        />
+      </div>
+
+      {/* SPU + SDW + CLASSIFICATION */}
+      <div
+        className={`grid gap-6 ${
+          windowWidth < 600
+            ? "[grid-template-columns:repeat(1,minmax(0,1fr))]"
+            : "[grid-template-columns:repeat(2,minmax(0,1fr))]"
+        }`}
+      >
+        {/* SPU */}
+        <div className="grid gap-2 min-w-0">
+          <label className="font-bold-label">
+            <span className="text-red-500">*</span> SPU Project
+          </label>
+          <select
+            className="text-input font-label w-full max-w-full min-w-0"
+            value={drafts.spu}
+            disabled={!["head", "supervisor"].includes(user?.role)}
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, spu: e.target.value }))
+            }
+            data-cy="spu"
+          >
+            <option value="">Select SPU</option>
+            {projectLocation.map((spu) => (
+              <option key={spu._id} value={spu._id}>
+                {spu.spu_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* SDW */}
+        <div className="grid gap-2 min-w-0">
+          <label className="font-bold-label">
+            <span className="text-red-500">*</span> Social Development Worker
+          </label>
+          <select
+            className="text-input font-label w-full max-w-full min-w-0"
+            disabled={!["head", "supervisor"].includes(user?.role)}
+            value={drafts.assigned_sdw}
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, assigned_sdw: e.target.value }))
+            }
+            data-cy="assigned-sdw"
+          >
+            <option value="">Select SDW</option>
+            {socialDevelopmentWorkers
+              .filter((sdw) => {
+                const selectedSPUName = projectLocation.find(
+                  (spu) => spu._id === drafts.spu
+                )?.spu_name;
+                return sdw.spu_id === selectedSPUName && sdw.role === "sdw";
+              })
+              .map((sdw) => (
+                <option key={sdw.id} value={sdw.id}>
+                  {sdw.username}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* CLASSIFICATION — full row <1000; own row <600 */}
+        <div
+          className={`grid gap-2 min-w-0 ${
+            windowWidth < 1000 && windowWidth >= 600
+              ? "col-span-2"
+              : windowWidth < 600
+              ? "col-span-1"
+              : ""
+          }`}
+        >
+          <label className="font-bold-label">
+            <span className="text-red-500">*</span> Classification
+          </label>
+          <select
+            className="text-input font-label w-full min-w-0"
+            value={drafts.classifications}
+            onChange={(e) =>
+              setDrafts((p) => ({ ...p, classifications: e.target.value }))
+            }
+          >
+            <option value="">Select Classification</option>
+            {classificationList.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* SUBMIT */}
+      {editingField === "core-fields" && (
+        <button
+          className="btn-transparent-rounded my-3 justify-self-end"
+          onClick={async () => {
+            if (forceSubmitAfterConfirm) {
+              await handleSubmitCoreUpdate();
+              setForceSubmitAfterConfirm(false);
+              return;
+            }
+
+            const valid = await checkCore();
+            if (!valid) return;
+
+            if (valid === "pending-super-confirm") {
+              setModalTitle("SDW Outside Supervision");
+              setModalBody(
+                "You are about to assign the case to an SDW that is not under your supervision. You will no longer be able to modify the case. Are you sure you want to proceed?"
+              );
+              setModalImageCenter(<div className="warning-icon mx-auto" />);
+              setModalConfirm(true);
+
+              setModalOnConfirm(() => async () => {
+                setForceSubmitAfterConfirm(true);
+                setShowModal(false);
+                await handleSubmitCoreUpdate();
+              });
+
+              setModalOnClose(() => () => {
+                setForceSubmitAfterConfirm(false);
+              });
+
+              setShowModal(true);
+              return;
+            }
+
+            await handleSubmitCoreUpdate();
+          }}
+          data-cy="submit-core-details-section"
+        >
+          Submit Changes
+        </button>
+      )}
+    </>
+  ) : (
+    /* VIEW MODE */
+    <>
+      <div className="grid grid-cols-[1fr_auto] items-center">
+        <h1 className="header-main">{`${data.first_name} ${data.middle_name} ${data.last_name}`}</h1>
+        {data.is_active && !isTerminated && (
+          <button
+            className={
+              editingField === "core-fields"
+                ? "icon-button-setup x-button"
+                : "icon-button-setup dots-button"
+            }
+            onClick={() => {
+              if (editingField) {
+                resetFields();
+              } else {
+                setEditingField("core-fields");
+              }
+            }}
+            data-cy="edit-core-details-section"
+          />
+        )}
+      </div>
+
+      <h2 className="header-sub">{data.sm_number}</h2>
+
+      {/* VIEW GRID: same JS rules for layout */}
+      <div
+        className={`grid gap-4 ${
+          windowWidth < 600
+            ? "[grid-template-columns:repeat(1,minmax(0,1fr))]"
+            : "[grid-template-columns:repeat(2,minmax(0,1fr))]"
+        }`}
+      >
+        <p className="font-label min-w-0 break-words">
+          <span className="font-bold-label">SPU Project:</span>{" "}
+          {projectLocation.find((p) => p._id === data.spu)?.spu_name || "-"}
+        </p>
+
+        <p className="font-label min-w-0 break-words">
+          <span className="font-bold-label">Social Development Worker:</span>{" "}
+          {socialDevelopmentWorkers.find((w) => w.id === data.assigned_sdw)
+            ?.username || "-"}
+        </p>
+
+        <p
+          className={`font-label min-w-0 break-words ${
+            windowWidth < 1000 && windowWidth >= 600
+              ? "col-span-2"
+              : windowWidth < 600
+              ? "col-span-1"
+              : ""
+          }`}
+        >
+          <span className="font-bold-label">Classification:</span>{" "}
+          {data.classifications || "-"}
+        </p>
+      </div>
+    </>
+  )}
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        <section className='flex flex-col gap-8' id="identifying-data" ref={ref1}>
+                            {/* Header and Edit Button */}
+                            <div className="flex justify-between items-center">
+                                <h1 className="header-main">Identifying Data</h1>
+                                {user?.role == "sdw" && !creating && data.is_active && !isTerminated && (
                                     <button
-                                        className="btn-blue font-bold-label drop-shadow-base"
-                                        data-cy="download-case"
-                                        onClick={() => generateCaseReport(clientId)}
-                                    >
-                                        Download
-                                    </button>
-                                </div>
-                            }
-
-                            {((editingField === "all" || editingField === "core-fields")) && (
-                                <div className="flex items-center justify-between">
-                                    <h1 className="header-main">Core Details</h1>
-                                    {!creating && <button
                                         className={
-                                            editingField === "core-fields"
+                                            editingField === "identifying-fields"
                                                 ? "icon-button-setup x-button"
                                                 : "icon-button-setup dots-button"
                                         }
                                         onClick={() => {
-                                            if (editingField) {
-                                                resetFields();
-                                            } else {
-                                                setEditingField("core-fields");
-                                            }
+                                            if (editingField) resetFields();
+                                            else setEditingField("identifying-fields");
                                         }}
-                                    ></button>}
-                                </div>
-                            )}
-
-                            {(editingField === "all" || editingField === "core-fields") ? (
-                                <>
-                                    <div className="flex gap-5 w-full">
-                                        <div className="flex flex-col gap-5 w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> First Name</label>
-                                            <input
-                                                disabled={!creating}
-                                                type="text"
-                                                value={drafts.first_name}
-                                                placeholder='First Name'
-                                                onChange={(e) => setDrafts(prev => ({ ...prev, first_name: e.target.value }))}
-                                                className="text-input font-label w-full"
-                                                data-cy='fname'
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-5 w-full">
-                                            <label className="font-bold-label">Middle Name</label>
-                                            <input
-                                                disabled={!creating}
-                                                type="text"
-                                                value={drafts.middle_name}
-                                                placeholder='Middle Name'
-                                                onChange={(e) => setDrafts(prev => ({ ...prev, middle_name: e.target.value }))}
-                                                className="text-input font-label w-full"
-                                                data-cy='mname'
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-5 w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Last Name</label>
-                                            <input
-                                                disabled={!creating}
-                                                type="text"
-                                                value={drafts.last_name}
-                                                placeholder='Last Name'
-                                                onChange={(e) => setDrafts(prev => ({ ...prev, last_name: e.target.value }))}
-                                                className="text-input font-label w-full"
-                                                data-cy='lname'
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-5 w-full">
-                                        <label className="font-bold-label"><span className='text-red-500'>*</span> CH Number</label>
-                                        <input
-                                            disabled={!creating}
-                                            type="text"
-                                            value={drafts.sm_number}
-                                            placeholder='CH Number'
-                                            onChange={(e) => setDrafts(prev => ({ ...prev, sm_number: e.target.value }))}
-                                            className="text-input font-label w-full max-w-[30rem]"
-                                            data-cy='sm-number'
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="flex items-center justify-between">
-                                        <h1 className="header-main">{`${data.first_name} ${data.middle_name} ${data.last_name}`}</h1>
-                                        {data.is_active && !isTerminated && <button
-                                            className={
-                                                editingField === "core-fields"
-                                                    ? "icon-button-setup x-button"
-                                                    : "icon-button-setup dots-button"
-                                            }
-                                            onClick={() => {
-                                                if (editingField) {
-                                                    resetFields();
-                                                } else {
-                                                    setEditingField("core-fields");
-                                                }
-                                            }}
-                                            data-cy='edit-core-details-section'
-                                        ></button>}
-                                    </div>
-                                    <h2 className="header-sub">{data.sm_number}</h2>
-                                </>
-                            )}
-
-                            <div className="flex flex-wrap justify-between gap-10">
-                                {/* SPU Project */}
-                                <div className="flex w-full flex-col md:w-[48%]">
-                                    {(editingField === "all" || editingField === "core-fields") ? (
-                                        <>
-                                            <label className='font-bold-label'><span className='text-red-500'>*</span> SPU Project</label>
-                                            <select
-                                                className="text-input font-label"
-                                                value={drafts.spu}
-                                                disabled={!["head", "supervisor"].includes(user?.role)}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({
-                                                        ...prev,
-                                                        spu: e.target.value,
-                                                    }))
-                                                }
-                                                data-cy='spu'
-                                            >
-                                                <option value="">Select SPU</option>
-                                                {projectLocation.map((spu) => (
-                                                    <option key={spu._id} value={spu._id}>
-                                                        {spu.spu_name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </>
-                                    ) : (
-                                        <p className="font-label">
-                                            <span className="font-bold-label">
-                                                SPU Project:
-                                            </span>{" "}
-                                            {projectLocation.find(
-                                                (p) => p._id === data.spu,
-                                            )?.spu_name || "-"}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* Social Development Worker */}
-                                <div className="flex w-full flex-col md:w-[48%]">
-                                    {(editingField === "all" || editingField === "core-fields") ? (
-                                        <>
-                                            <label className='font-bold-label'><span className='text-red-500'>*</span> Social Development Worker</label>
-                                            <select
-                                                className="text-input font-label"
-                                                disabled={!["head", "supervisor"].includes(user?.role)}
-                                                value={drafts.assigned_sdw}
-                                                onChange={(e) => {
-                                                    setDrafts((prev) => ({
-                                                        ...prev,
-                                                        assigned_sdw: e.target.value,
-                                                    }));
-                                                }}
-                                                data-cy="assigned-sdw"
-                                            >
-                                                <option value="">Select SDW</option>
-                                                {socialDevelopmentWorkers
-                                                    .filter((sdw) => {
-                                                        const selectedSPUName = projectLocation.find(
-                                                            (spu) => spu._id === drafts.spu
-                                                        )?.spu_name;
-                                                        return sdw.spu_id === selectedSPUName && sdw.role === "sdw";
-                                                    })
-                                                    .map((sdw) => (
-                                                        <option key={sdw.id} value={sdw.id}>
-                                                            {sdw.username}
-                                                        </option>
-                                                    ))}
-                                            </select>
-
-
-                                        </>
-                                    ) : (
-                                        <p className="font-label">
-                                            <span className="font-bold-label">
-                                                Social Development Worker:
-                                            </span>{" "}
-                                            {socialDevelopmentWorkers.find(
-                                                (w) => w.id === data.assigned_sdw,
-                                            )?.username || "-"}
-                                        </p>
-
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className='flex flex-col w-full'>
-                                <label className="font-bold-label mb-2">
-                                    {(editingField === "all" || editingField === "core-fields") && (
-                                        <span className="text-red-500">* </span>
-                                    )}
-                                    Classification
-                                    {!(editingField === "all" || editingField === "core-fields") && (
-                                        <>: {data.classifications}</>
-                                    )}
-                                </label>
-                                {(editingField === "all" || editingField === "core-fields") && (
-                                    <>
-                                        <div className="flex w-full max-w-[50rem] items-center self-start">
-                                            <select
-                                                className="text-input font-label"
-                                                value={drafts.classifications}
-                                                onChange={(e) =>
-                                                    setDrafts((prev) => ({
-                                                        ...prev,
-                                                        classifications: e.target.value,
-                                                    }))
-                                                }
-                                            >
-                                                <option value="">
-                                                    Select Classification
-                                                </option>
-                                                {classificationList.map((item) => (
-                                                    <option key={item} value={item}>
-                                                        {item}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </>
+                                        data-cy='edit-identifying-data-section'
+                                    ></button>
                                 )}
                             </div>
 
-                            {editingField === "core-fields" && (
-                                <button
-                                    className="btn-transparent-rounded my-3 ml-auto"
-                                    onClick={async () => {
-                                        if (forceSubmitAfterConfirm) {
-                                            await handleSubmitCoreUpdate();
-                                            setForceSubmitAfterConfirm(false);
-                                            return;
-                                        }
-
-                                        const valid = await checkCore();
-                                        if (!valid) return;
-
-
-                                        if (valid === "pending-super-confirm") {
-                                            setModalTitle("SDW Outside Supervision");
-                                            setModalBody("You are about to assign the case to an SDW that is not under your supervision. You will no longer be able to modify the case. Are you sure you want to proceed?");
-                                            setModalImageCenter(<div className="warning-icon mx-auto" />);
-                                            setModalConfirm(true);
-
-                                            setModalOnConfirm(() => async () => {
-                                                setForceSubmitAfterConfirm(true);
-                                                setShowModal(false);
-                                                await handleSubmitCoreUpdate();
-                                            });
-
-                                            setModalOnClose(() => () => {
-                                                setForceSubmitAfterConfirm(false);
-                                            });
-
-                                            setShowModal(true);
-                                            return;
-                                        }
-
-                                        await handleSubmitCoreUpdate();
-                                    }}
-                                    data-cy="submit-core-details-section"
-                                >
-                                    Submit Changes
-                                </button>
-                            )}
-
-
-                        </section>
-
-                        <section className='flex flex-col gap-8' id="identifying-data" ref={ref1}>
-                            <div className="flex justify-between items-center">
-                                <h1 className="header-main">Identifying Data</h1>
-                                {user?.role == "sdw" && !creating && data.is_active && !isTerminated && <button
-                                    className={
-                                        editingField === "identifying-fields"
-                                            ? "icon-button-setup x-button"
-                                            : "icon-button-setup dots-button"
-                                    }
-                                    onClick={() => {
-                                        if (editingField) {
-                                            resetFields();
-                                        } else {
-                                            setEditingField("identifying-fields");
-                                        }
-                                    }}
-                                    data-cy='edit-identifying-data-section'
-                                ></button>}
-                            </div>
-
+                            {/* Editing Mode */}
                             {(editingField === "all" || editingField === "identifying-fields") ? (
                                 <>
-                                    <div className="flex justify-between gap-20">
-                                        <div className="flex w-full flex-col gap-5">
+                                    {/* Responsive Layout */}
+                                    <div
+                                        className={
+                                            windowWidth <= 400
+                                                ? "flex flex-col gap-y-[0.5rem] gap-x-0" // ✅ 1 column layout, 0.5rem vertical gap
+                                                : windowWidth <= 500
+                                                    ? "grid grid-cols-2 gap-x-10 gap-y-[1rem]" // ✅ 2-column layout with 1rem row gap
+                                                    : windowWidth <= 700
+                                                        ? "grid grid-cols-3 gap-10"
+                                                        : "grid grid-cols-4 gap-10"
+                                        }
+                                    >
+
+                                        {/* ROW 1 */}
+                                        <div className="flex flex-col gap-5 w-full">
                                             <label className="font-bold-label" htmlFor="age">Age</label>
                                             <input
                                                 type="number"
@@ -1540,7 +1647,9 @@ function CaseFrontend({ creating = false }) {
                                         </div>
 
                                         <div className="flex flex-col gap-5 w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Date of Birth</label>
+                                            <label className="font-bold-label">
+                                                <span className='text-red-500'>*</span> Date of Birth
+                                            </label>
                                             <input
                                                 disabled={!creating}
                                                 type="date"
@@ -1551,8 +1660,10 @@ function CaseFrontend({ creating = false }) {
                                             />
                                         </div>
 
-                                        <div className='flex flex-col gap-5 w-full'>
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Sex</label>
+                                        <div className="flex flex-col gap-5 w-full">
+                                            <label className="font-bold-label">
+                                                <span className='text-red-500'>*</span> Sex
+                                            </label>
                                             <select
                                                 disabled={!creating}
                                                 className='text-input font-label'
@@ -1566,7 +1677,7 @@ function CaseFrontend({ creating = false }) {
                                             </select>
                                         </div>
 
-                                        <div className="flex w-full flex-col gap-5">
+                                        <div className="flex flex-col gap-5 w-full">
                                             <label className="font-bold-label">Contact No.</label>
                                             <input
                                                 type="text"
@@ -1577,9 +1688,8 @@ function CaseFrontend({ creating = false }) {
                                                 data-cy='contact-num'
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className='flex justify-between gap-20'>
+                                        {/* ROW 2 */}
                                         <div className="flex flex-col gap-5 w-full">
                                             <label className="font-bold-label">Educational Attainment</label>
                                             <input
@@ -1592,7 +1702,7 @@ function CaseFrontend({ creating = false }) {
                                             />
                                         </div>
 
-                                        <div className='flex flex-col gap-5 w-full'>
+                                        <div className="flex flex-col gap-5 w-full">
                                             <label className="font-bold-label">Occupation</label>
                                             <input
                                                 type="text"
@@ -1605,7 +1715,9 @@ function CaseFrontend({ creating = false }) {
                                         </div>
 
                                         <div className="flex flex-col gap-5 w-full">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Civil Status</label>
+                                            <label className="font-bold-label">
+                                                <span className='text-red-500'>*</span> Civil Status
+                                            </label>
                                             <select
                                                 className="text-input font-label"
                                                 value={drafts.civil_status || ""}
@@ -1621,7 +1733,7 @@ function CaseFrontend({ creating = false }) {
                                             </select>
                                         </div>
 
-                                        <div className='flex flex-col gap-5 w-full'>
+                                        <div className="flex flex-col gap-5 w-full">
                                             <label className="font-bold-label">Religion</label>
                                             <input
                                                 type="text"
@@ -1632,87 +1744,77 @@ function CaseFrontend({ creating = false }) {
                                                 data-cy='religion'
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className="flex justify-between gap-20">
-                                        {/* <div className="flex w-full flex-col gap-5">
-                                    <label className="font-bold-label">Relationship to Client</label>
-                                    <input
-                                        type="text"
-                                        className="text-input font-label"
-                                        placeholder="Relationship to Client"
-                                        value={drafts.relationship_to_client || ""}
-                                        onChange={(e) => setDrafts(prev => ({ ...prev, relationship_to_client: e.target.value }))}
-                                        data-cy='relationship'
-                                    />
-                                </div> */}
+                                        {/* At <=700px: show Place of Birth in grid */}
+                                        {windowWidth <= 700 && (
+                                            <div className='flex flex-col gap-5 w-full'>
+                                                <label className="font-bold-label">
+                                                    <span className='text-red-500'>* </span>Place of Birth
+                                                </label>
+                                                <input
+                                                    disabled={!creating}
+                                                    type="text"
+                                                    value={drafts.pob || ""}
+                                                    placeholder='Place of Birth'
+                                                    onChange={(e) => setDrafts(prev => ({ ...prev, pob: e.target.value }))}
+                                                    className='text-input font-label'
+                                                    data-cy='pob'
+                                                />
+                                            </div>
+                                        )}
 
-                                        <div className="flex w-full flex-col gap-5">
-                                            <label className="font-bold-label"><span className='text-red-500'>*</span> Present Address</label>
+                                        {/* ROW 3: Present Address */}
+                                        <div className={`flex flex-col gap-5 w-full ${windowWidth > 700 ? "col-span-2" : "col-span-full"}`}>
+                                            <label className="font-bold-label">
+                                                <span className='text-red-500'>*</span> Present Address
+                                            </label>
                                             <textarea
-                                                className="text-input font-label resize-y min-h-[20rem]"
+                                                className="text-input font-label resize-y min-h-[10rem]"
+                                                style={{
+                                                    maxWidth: windowWidth <= 700 ? "40rem" : "none",
+                                                    width: "100%",
+                                                }}
                                                 placeholder="Present Address"
                                                 value={drafts.present_address || ""}
-                                                onChange={(e) => setDrafts(prev => ({ ...prev, present_address: e.target.value }))}
-                                                data-cy='address'
+                                                onChange={(e) =>
+                                                    setDrafts((prev) => ({ ...prev, present_address: e.target.value }))
+                                                }
+                                                data-cy="address"
                                             ></textarea>
                                         </div>
 
-                                        <div className='flex flex-col gap-5 w-full'>
-                                            <label className="font-bold-label">{<span className='text-red-500'>* </span>}Place of Birth</label>
-                                            <input
-                                                disabled={!creating}
-                                                type="text"
-                                                value={drafts.pob || ""}
-                                                placeholder='Place of Birth'
-                                                onChange={(e) => setDrafts(prev => ({ ...prev, pob: e.target.value }))}
-                                                className='text-input font-label'
-                                                data-cy='pob'
-                                            />
-                                        </div>
+                                        {/* Only show beside Address if >700px */}
+                                        {windowWidth > 700 && (
+                                            <div className='flex flex-col gap-5 w-full'>
+                                                <label className="font-bold-label">
+                                                    <span className='text-red-500'>* </span>Place of Birth
+                                                </label>
+                                                <input
+                                                    disabled={!creating}
+                                                    type="text"
+                                                    value={drafts.pob || ""}
+                                                    placeholder='Place of Birth'
+                                                    onChange={(e) => setDrafts(prev => ({ ...prev, pob: e.target.value }))}
+                                                    className='text-input font-label'
+                                                    data-cy='pob'
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {!creating && <div className="flex justify-end">
-                                        <button
-                                            className="btn-transparent-rounded my-3 ml-auto"
-                                            onClick={async () => {
-                                                const valid = checkIdentifying();
-                                                if (!valid) return;
-
-                                                try {
-                                                    const updated = await updateIdentifyingCaseData(drafts, clientId);
-
-                                                    setData((prev) => ({
-                                                        ...prev,
-                                                        dob: updated.dob || drafts.dob,
-                                                        civil_status: updated.civil_status || drafts.civil_status,
-                                                        edu_attainment: updated.edu_attainment || drafts.edu_attainment,
-                                                        sex: updated.sex || drafts.sex,
-                                                        pob: updated.pob || drafts.pob,
-                                                        religion: updated.religion || drafts.religion,
-                                                        occupation: updated.occupation || drafts.occupation,
-                                                        present_address: updated.present_address || drafts.present_address,
-                                                        contact_no: updated.contact_no || drafts.contact_no,
-                                                    }));
-
-                                                    setEditingField(null);
-                                                    showSuccess("Identifying data was successfully updated!");
-                                                } catch (error) {
-                                                    setModalTitle("Update Error");
-                                                    setModalBody(error.message || "An unexpected error occurred.");
-                                                    setModalImageCenter(<div className="warning-icon mx-auto"></div>);
-                                                    setModalConfirm(false);
-                                                    setShowModal(true);
-                                                }
-                                            }}
-                                            data-cy="submit-identifying-data-section"
-                                        >
-                                            Submit Changes
-                                        </button>
-                                    </div>}
                                 </>
                             ) : (
-                                <div className="font-label grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3">
+                                // VIEWING MODE
+                                <div
+                                    className={
+                                        windowWidth <= 400
+                                            ? "font-label grid grid-cols-1 gap-x-10 gap-y-6"
+                                            : windowWidth <= 500
+                                                ? "font-label grid grid-cols-2 gap-x-10 gap-y-6"
+                                                : windowWidth <= 700
+                                                    ? "font-label grid grid-cols-3 gap-x-10 gap-y-6"
+                                                    : "font-label grid grid-cols-3 gap-x-10 gap-y-6"
+                                    }
+                                >
                                     <p><span className="font-bold-label">Age:</span> {age == 0 ? 0 : age || "-"}</p>
                                     <p><span className="font-bold-label">Date of Birth:</span> {data.dob || "-"}</p>
                                     <p><span className="font-bold-label">Sex:</span> {data.sex || "-"}</p>
@@ -1721,12 +1823,16 @@ function CaseFrontend({ creating = false }) {
                                     <p><span className="font-bold-label">Occupation:</span> {data.occupation || "-"}</p>
                                     <p><span className="font-bold-label">Civil Status:</span> {data.civil_status || "-"}</p>
                                     <p><span className="font-bold-label">Religion:</span> {data.religion || "-"}</p>
-                                    {/* <p><span className="font-bold-label">Relationship to Client:</span> {data.relationship_to_client || "-"}</p> */}
                                     <p><span className="font-bold-label">Present Address:</span> {data.present_address || "-"}</p>
                                     <p><span className="font-bold-label">Place of Birth:</span> {data.pob || "-"}</p>
+                                    <p>
+                                    <span className="font-bold-label">Case Created At:</span>{" "}
+                                    {data.createdAt ? new Date(data.createdAt).toLocaleDateString() : "-"}
+                                    </p>
                                 </div>
                             )}
                         </section>
+
 
                         <section
                             className="flex flex-col gap-8"
@@ -1753,7 +1859,18 @@ function CaseFrontend({ creating = false }) {
                                         </div>
                                     ) : (
                                         <div
-                                            className="outline-gray flex w-full gap-8 overflow-x-auto rounded-lg p-6"
+                                            className={`outline-gray w-full gap-8 overflow-x-auto rounded-lg p-6 ${windowWidth <= 900
+                                                ? "grid grid-flow-col auto-cols-max"
+                                                : "flex"
+                                                }`}
+                                            style={
+                                                windowWidth <= 900
+                                                    ? {
+                                                        gridTemplateRows: "repeat(2, minmax(0, 1fr))", // two rows
+                                                        gridAutoFlow: "column", // horizontal scroll
+                                                    }
+                                                    : {}
+                                            }
                                         >
                                             {familyMembers.map((member, index) => (
                                                 <FamilyCard
@@ -1780,11 +1897,23 @@ function CaseFrontend({ creating = false }) {
                                                 />
                                             ))}
                                         </div>
+
                                     )}
                                 </div>
 
                             </>}
                         </section>
+
+
+
+
+
+
+
+
+
+
+
 
                         <section
                             className="flex flex-col gap-8"
@@ -1794,29 +1923,42 @@ function CaseFrontend({ creating = false }) {
                             <div className="flex items-center justify-between gap-4">
                                 <h1 className="header-main">Problems and Findings</h1>
                                 {/* {user?.role == "sdw" && !creating && <button
-                            className={
-                                editingField === "history-fields"
-                                    ? "icon-button-setup x-button"
-                                    : "icon-button-setup dots-button"
-                            }
-                            onClick={() => {
-                                if (editingField) {
-                                    resetFields();
-                                } else {
-                                    setEditingField("history-fields");
-                                }
-                            }}
-                            data-cy="edit-problems-findings-section"
-                        ></button>} */}
+      className={
+        editingField === "history-fields"
+          ? "icon-button-setup x-button"
+          : "icon-button-setup dots-button"
+      }
+      onClick={() => {
+        if (editingField) {
+          resetFields();
+        } else {
+          setEditingField("history-fields");
+        }
+      }}
+      data-cy="edit-problems-findings-section"
+    ></button>} */}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-10">
+                            <div
+                                className={
+                                    windowWidth <= 700
+                                        ? "grid grid-cols-1 gap-10"
+                                        : "grid grid-cols-2 gap-10"
+                                }
+                            >
+                                {/* Problem Presented (stays first column) */}
                                 <div className="flex flex-col gap-4">
-                                    <h3 className="header-sub">{creating && <span className='text-red-500'>* </span>}Problem Presented</h3>
+                                    <h3 className="header-sub">
+                                        {creating && <span className="text-red-500">* </span>}
+                                        Problem Presented
+                                    </h3>
 
                                     {(editingField === "all" || editingField === "history-fields") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             value={drafts.problem_presented}
                                             placeholder="Problem Presented"
                                             onChange={(e) =>
@@ -1834,12 +1976,23 @@ function CaseFrontend({ creating = false }) {
                                     )}
                                 </div>
 
-                                <div className="flex flex-col gap-4">
-                                    <h3 className="header-sub">{creating && <span className='text-red-500'>* </span>}History of the Problem</h3>
+                                {/* History of the Problem — at <=700px span 2 cols (forces next row) */}
+                                <div
+                                    className={`flex flex-col gap-4 ${windowWidth <= 700 ? "col-span-2" : "col-span-1"
+                                        }`}
+                                    style={windowWidth <= 700 ? { gridColumn: "1 / -1" } : undefined}
+                                >
+                                    <h3 className="header-sub">
+                                        {creating && <span className="text-red-500">* </span>}
+                                        History of the Problem
+                                    </h3>
 
                                     {(editingField === "all" || editingField === "history-fields") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             placeholder="History of the Problem"
                                             value={drafts.history_problem}
                                             onChange={(e) =>
@@ -1857,12 +2010,19 @@ function CaseFrontend({ creating = false }) {
                                     )}
                                 </div>
 
+                                {/* Findings */}
                                 <div className="flex flex-col gap-4">
-                                    <h3 className="header-sub">{creating && <span className='text-red-500'>* </span>}Findings</h3>
+                                    <h3 className="header-sub">
+                                        {creating && <span className="text-red-500">* </span>}
+                                        Findings
+                                    </h3>
 
                                     {(editingField === "all" || editingField === "history-fields") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             placeholder="Findings"
                                             value={drafts.observation_findings}
                                             onChange={(e) =>
@@ -1894,9 +2054,12 @@ function CaseFrontend({ creating = false }) {
 
                                             setData((prev) => ({
                                                 ...prev,
-                                                problem_presented: updated.problemPresented || drafts.problem_presented,
-                                                history_problem: updated.historyProblem || drafts.history_problem,
-                                                observation_findings: updated.observationFindings || drafts.observation_findings,
+                                                problem_presented:
+                                                    updated.problemPresented || drafts.problem_presented,
+                                                history_problem:
+                                                    updated.historyProblem || drafts.history_problem,
+                                                observation_findings:
+                                                    updated.observationFindings || drafts.observation_findings,
                                             }));
 
                                             setEditingField(null);
@@ -1914,7 +2077,6 @@ function CaseFrontend({ creating = false }) {
                                 >
                                     Submit Changes
                                 </button>
-
                             )}
                         </section>
 
@@ -1954,8 +2116,8 @@ function CaseFrontend({ creating = false }) {
                             <div className="flex w-full flex-col">
                                 <div className="flex w-full flex-col gap-40 border-b border-[var(--border-color)]">
                                     <div className="flex justify-between px-2.5">
-                                        <p className="label-base w-80">Intervention</p>
-                                        <p className="label-base w-80">Date</p>
+                                        <p className="label-base max-w-80">Intervention</p>
+                                        <p className="label-base max-w-80">Date</p>
                                     </div>
                                 </div>
                                 <div className="flex w-full flex-col flex-wrap gap-2.5">
@@ -1976,10 +2138,10 @@ function CaseFrontend({ creating = false }) {
                                                     className="flex h-16 items-center justify-between rounded-lg p-2.5 text-left hover:bg-[var(--bg-color-dark)]"
                                                     data-cy={`intervention-item-${item.intervention}-${index}`}
                                                 >
-                                                    <p className="label-base w-80">
+                                                    <p className="label-base max-w-80">
                                                         {item.intervention} {index + 1}
                                                     </p>
-                                                    <p className="label-base w-80">
+                                                    <p className="label-base max-w-80">
                                                         {item.date}
                                                     </p>
                                                 </a>
@@ -2019,10 +2181,10 @@ function CaseFrontend({ creating = false }) {
                             <div className="flex w-full flex-col">
                                 <div className="flex w-full flex-col gap-40 border-b border-[var(--border-color)]">
                                     <div className="flex justify-between px-2.5">
-                                        <p className="label-base w-80">
+                                        <p className="label-base max-w-80">
                                             Progress Report
                                         </p>
-                                        <p className="label-base w-80">Date</p>
+                                        <p className="label-base max-w-80">Date</p>
                                     </div>
                                 </div>
                                 <div className="flex w-full flex-col flex-wrap gap-2.5">
@@ -2038,10 +2200,10 @@ function CaseFrontend({ creating = false }) {
                                                 className="flex h-16 items-center justify-between rounded-lg p-2.5 text-left hover:bg-[var(--bg-color-dark)]"
                                                 data-cy={`progress-report-item-${item.name}-${index}`}
                                             >
-                                                <p className="label-base w-80" data-cy={`disp-progress-report-item-${item.name}-${index}`}>
+                                                <p className="label-base max-w-80" data-cy={`disp-progress-report-item-${item.name}-${index}`}>
                                                     {item.name} {index + 1}
                                                 </p>
-                                                <p className="label-base w-80">
+                                                <p className="label-base max-w-80">
                                                     {item.date}
                                                 </p>
                                             </a>
@@ -2084,7 +2246,7 @@ function CaseFrontend({ creating = false }) {
                             onClick={() => {
                                 if (editingField) {
                                     resetFields();
-                                } else {
+                                                               } else {
                                     setEditingField("assessment-field");
                                 }
                             }}
@@ -2096,7 +2258,10 @@ function CaseFrontend({ creating = false }) {
                                 <div className="flex flex-col gap-4">
                                     {(editingField === "all" || editingField === "assessment-field") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             value={drafts.assessment || ""}
                                             placeholder="Assessment"
                                             onChange={(e) =>
@@ -2157,30 +2322,42 @@ function CaseFrontend({ creating = false }) {
                                     Evaluation and Recommendation
                                 </h1>
                                 {/* {!creating && user?.role == "sdw" && <button
-                           
-                            className={
-                                editingField === "evaluation-fields"
-                                    ? "icon-button-setup x-button"
-                                    : "icon-button-setup dots-button"
-                            }
-                            onClick={() => {
-                                if (editingField) {
-                                    resetFields();
-                                } else {
-                                    setEditingField("evaluation-fields");
-                                }
-                            }}
-                            data-cy="edit-evaluation-recommendation-section"
-                        ></button>} */}
+      className={
+        editingField === "evaluation-fields"
+          ? "icon-button-setup x-button"
+          : "icon-button-setup dots-button"
+      }
+      onClick={() => {
+        if (editingField) {
+          resetFields();
+        } else {
+          setEditingField("evaluation-fields");
+        }
+      }}
+      data-cy="edit-evaluation-recommendation-section"
+    ></button>} */}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-10">
+                            <div
+                                className={
+                                    windowWidth <= 700
+                                        ? "grid grid-cols-1 gap-10"
+                                        : "grid grid-cols-2 gap-10"
+                                }
+                            >
+                                {/* Evaluation (left) */}
                                 <div className="flex flex-col gap-4">
-                                    <h3 className="header-sub">{creating && <span className='text-red-500'>* </span>}Evaluation</h3>
+                                    <h3 className="header-sub">
+                                        {creating && <span className="text-red-500">* </span>}
+                                        Evaluation
+                                    </h3>
 
                                     {(editingField === "all" || editingField === "evaluation-fields") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             value={drafts.evaluation}
                                             placeholder="Evaluation"
                                             onChange={(e) =>
@@ -2198,12 +2375,23 @@ function CaseFrontend({ creating = false }) {
                                     )}
                                 </div>
 
-                                <div className="flex flex-col gap-4">
-                                    <h3 className="header-sub">{creating && <span className='text-red-500'>* </span>}Recommendation</h3>
+                                {/* Recommendation — at <=700px span 2 cols (forces next row) */}
+                                <div
+                                    className={`flex flex-col gap-4 ${windowWidth <= 700 ? "col-span-2" : "col-span-1"
+                                        }`}
+                                    style={windowWidth <= 700 ? { gridColumn: "1 / -1" } : undefined}
+                                >
+                                    <h3 className="header-sub">
+                                        {creating && <span className="text-red-500">* </span>}
+                                        Recommendation
+                                    </h3>
 
                                     {(editingField === "all" || editingField === "evaluation-fields") ? (
                                         <textarea
-                                            className="text-input font-label resize-y min-h-[20rem]"
+                                            style={{
+                                                minHeight: windowWidth <= 700 ? "12rem" : "20rem",
+                                            }}
+                                            className="text-input font-label resize-y"
                                             value={drafts.recommendation}
                                             placeholder="Recommendation"
                                             onChange={(e) =>
@@ -2252,10 +2440,9 @@ function CaseFrontend({ creating = false }) {
                                 >
                                     Submit Changes
                                 </button>
-
-
                             )}
                         </section>
+
 
                         {creating && <button className="btn-blue header-sub drop-shadow-base my-3 mb-20 mx-auto"
                             onClick={submitNewCase}
@@ -2300,3 +2487,5 @@ function CaseFrontend({ creating = false }) {
 }
 
 export default CaseFrontend;
+
+//

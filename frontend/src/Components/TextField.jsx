@@ -8,6 +8,7 @@ export const TextInput = ({
     handleChange,
     disabled = false,
     error = "",
+    placeholder = "", // added placeholder prop
 }) => {
     return (
         <div className="flex flex-col">
@@ -21,7 +22,8 @@ export const TextInput = ({
                         setValue?.(e.target.value);
                     }}
                     disabled={disabled}
-                    className={`body-base text-input w-96 ${
+                    placeholder={placeholder} // pass placeholder
+                    className={`body-base text-input w-full ${
                             error ? "text-input-error" : ""
                         } ${disabled ? "cursor-not-allowed bg-gray-200" : ""}`}
                 />
@@ -42,6 +44,7 @@ export const DateInput = ({
     handleChange,
     disabled = false,
     error = "",
+    placeholder = "", // added placeholder prop
 }) => {
     return (
         <div className="flex flex-col">
@@ -55,7 +58,8 @@ export const DateInput = ({
                         setValue?.(e.target.value);
                     }}
                     disabled={disabled}
-                    className={`body-base text-input w-96 ${
+                    placeholder={placeholder} // pass placeholder
+                    className={`body-base text-input w-full ${
                             error ? "text-input-error" : ""
                         } ${disabled ? "cursor-not-allowed bg-gray-200" : ""}`}
                 />
@@ -79,6 +83,7 @@ export const TextArea = ({
     showTime = true,
     disabled = false,
     error = "",
+    placeholder = "", // added placeholder prop
 }) => {
     const [savedTime, setSavedTime] = useState(null);
     const timeoutRef = useRef(null);
@@ -116,7 +121,8 @@ export const TextArea = ({
                 <textarea
                     value={value}
                     onChange={handleChange || ((e) => setValue?.(e.target.value))}
-                    className={`body-base text-area h-32 ${
+                    placeholder={placeholder} // pass placeholder
+                    className={`body-base text-area h-32 w-full ${
                             error ? "text-area-error" : ""
                         } ${disabled ? "cursor-not-allowed bg-gray-100 text-black" : ""}`}
                     disabled={disabled}

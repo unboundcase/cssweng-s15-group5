@@ -38,7 +38,7 @@ export default function RegisterSpu({ isOpen, onClose, existingSpus = [], onRegi
     // Show confirmation dialog first
     setModalTitle("Confirm SPU Creation");
     setModalBody("Are you sure you want to create this SPU? Once created, it will be permanently recorded in the system. Even if deactivated later, it will still appear as an option in the archives.");
-    setModalImageCenter(<div className="info-icon mx-auto"></div>);
+    setModalImageCenter(<div className="warning-icon mx-auto"></div>);
     setModalConfirm(true);
     setShowModal(true);
     setModalOnConfirm(() => async () => {
@@ -76,12 +76,15 @@ export default function RegisterSpu({ isOpen, onClose, existingSpus = [], onRegi
   };
 
   const handleModalClose = () => {
-    if (modalConfirm) {
-      setShowModal(false);
-      modalOnConfirm?.();
-    } else {
-      setShowModal(false);
-    }
+    setShowModal(false);
+  };
+
+  const handleModalConfirm = () => {
+    modalOnConfirm?.();
+  };
+
+  const handleModalCancel = () => {
+    setShowModal(false);
   };
 
   return (
@@ -93,8 +96,8 @@ export default function RegisterSpu({ isOpen, onClose, existingSpus = [], onRegi
         bodyText={modalBody}
         imageCenter={modalImageCenter}
         confirm={modalConfirm}
-        onConfirm={modalOnConfirm}
-        onCancel={handleModalClose}
+        onConfirm={handleModalConfirm}
+        onCancel={handleModalCancel}
       />
 
       <AnimatePresence>

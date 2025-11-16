@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 
 import {
     updateFamilyMember,
@@ -47,6 +48,7 @@ const FamilyCard = ({
     activeMember = true
 }) => {
     const isEditing = selectedFamily === index;
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
     const handleInputChange = (field, value) => {
         setEditingFamilyValue({ ...editingFamilyValue, [field]: value });
@@ -180,14 +182,21 @@ const FamilyCard = ({
     };
 
     return (
-        <div className="drop-shadow-card outline-gray flex min-w-[45rem] flex-col gap-5 rounded-xl px-[2rem] py-[3rem]">
+        <div
+            className="drop-shadow-card outline-gray flex flex-col gap-5 rounded-xl px-[2rem] py-[3rem]"
+            style={{
+                // At <= 900px: lock card to 35rem so two-row grid feels balanced
+                // Above 900px: keep your original 45rem minimum to preserve layout
+                width: windowWidth <= 900 ? "35rem" : "auto",
+                minWidth: windowWidth <= 900 ? "35rem" : "45rem",
+            }}
+        >
             <div className="flex items-center justify-between gap-4">
                 {isEditing ? (
                     <h3 className="header-sub">Editing Member</h3>
                 ) : (
                     <h3 className="header-sub">
-                        {member.last || "-"}, {member.first || "-"}{" "}
-                        {member.middle || ""}
+                        {member.last || "-"}, {member.first || "-"} {member.middle || ""}
                     </h3>
                 )}
 
@@ -213,43 +222,18 @@ const FamilyCard = ({
 
             <div className="font-label grid grid-cols-[max-content_1fr] items-center gap-5 text-sm">
                 {[
-                    {
-                        label: "First Name",
-                        key: "first",
-                        type: "text",
-                        required: true,
-                    },
+                    { label: "First Name", key: "first", type: "text", required: true },
                     { label: "Middle Name", key: "middle", type: "text" },
-                    {
-                        label: "Last Name",
-                        key: "last",
-                        type: "text",
-                        required: true,
-                    },
-                    {
-                        label: "Age",
-                        key: "age",
-                        type: "number",
-                        required: true,
-                    },
-                    {
-                        label: "Income",
-                        key: "income",
-                        type: "number",
-                        required: true,
-                    },
+                    { label: "Last Name", key: "last", type: "text", required: true },
+                    { label: "Age", key: "age", type: "number", required: true },
+                    { label: "Income", key: "income", type: "number", required: true },
                     {
                         label: "Civil Status",
                         key: "civilStatus",
                         type: "civil-select",
                         required: true,
                     },
-                    {
-                        label: "Occupation",
-                        key: "occupation",
-                        type: "text",
-                        required: true,
-                    },
+                    { label: "Occupation", key: "occupation", type: "text", required: true },
                     {
                         label: "Educational Attainment",
                         key: "education",
@@ -262,28 +246,18 @@ const FamilyCard = ({
                         type: "text",
                         required: true,
                     },
-                    {
-                        label: "Living Status",
-                        key: "status",
-                        type: "select",
-                        required: true,
-                    },
+                    { label: "Living Status", key: "status", type: "select", required: true },
                 ].map(({ label, key, type, required }) => (
                     <React.Fragment key={key}>
                         <div className="font-bold-label">
-                            {required && isEditing && (
-                                <span className="text-red-500">*</span>
-                            )}{" "}
-                            {label}
+                            {required && isEditing && <span className="text-red-500">*</span>} {label}
                         </div>
                         {isEditing ? (
                             type === "select" ? (
                                 <select
                                     className="text-input"
                                     value={editingFamilyValue[key] || ""}
-                                    onChange={(e) =>
-                                        handleInputChange(key, e.target.value)
-                                    }
+                                    onChange={(e) => handleInputChange(key, e.target.value)}
                                 >
                                     <option value="">Select Status</option>
                                     <option value="Living">Living</option>
@@ -293,14 +267,10 @@ const FamilyCard = ({
                                 <select
                                     className="text-input"
                                     value={editingFamilyValue[key] || ""}
-                                    onChange={(e) =>
-                                        handleInputChange(key, e.target.value)
-                                    }
+                                    onChange={(e) => handleInputChange(key, e.target.value)}
                                     data-cy={`family-select-${key}-${index}`}
                                 >
-                                    <option value="">
-                                        Select Civil Status
-                                    </option>
+                                    <option value="">Select Civil Status</option>
                                     <option value="Single">Single</option>
                                     <option value="Married">Married</option>
                                     <option value="Divorced">Divorced</option>
@@ -313,12 +283,7 @@ const FamilyCard = ({
                                     placeholder={label}
                                     className="text-input"
                                     value={editingFamilyValue[key] || ""}
-                                    onChange={(e) =>
-                                        handleNumberInputChange(
-                                            key,
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => handleNumberInputChange(key, e.target.value)}
                                     data-cy={`family-input-${key}-${index}`}
                                 />
                             ) : type === "number" && key === "age" ? (
@@ -327,12 +292,7 @@ const FamilyCard = ({
                                     placeholder={label}
                                     className="text-input"
                                     value={editingFamilyValue[key] || ""}
-                                    onChange={(e) =>
-                                        handleAgeInputChange(
-                                            key,
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => handleAgeInputChange(key, e.target.value)}
                                     data-cy={`family-input-${key}-${index}`}
                                 />
                             ) : (
@@ -341,9 +301,7 @@ const FamilyCard = ({
                                     placeholder={label}
                                     className="text-input"
                                     value={editingFamilyValue[key] || ""}
-                                    onChange={(e) =>
-                                        handleInputChange(key, e.target.value)
-                                    }
+                                    onChange={(e) => handleInputChange(key, e.target.value)}
                                     data-cy={`family-input-${key}-${index}`}
                                 />
                             )
@@ -352,14 +310,12 @@ const FamilyCard = ({
                                 {(() => {
                                     const value = member[key];
                                     if (key === "age" || key === "income") {
-                                        {/* console.log("age/income", value); */}
                                         return `: ${!value ? "0" : value || "-"}`;
                                     } else {
                                         return `: ${value || "-"}`;
                                     }
                                 })()}
                             </span>
-
                         )}
                     </React.Fragment>
                 ))}
@@ -381,27 +337,17 @@ const FamilyCard = ({
                             const idToDelete = member.id;
 
                             setModalTitle("Delete Family Member");
-                            setModalBody(
-                                "Are you sure you want to delete this family member?",
-                            );
-                            setModalImageCenter(
-                                <div className="warning-icon mx-auto"></div>,
-                            );
+                            setModalBody("Are you sure you want to delete this family member?");
+                            setModalImageCenter(<div className="warning-icon mx-auto"></div>);
                             setModalConfirm(true);
 
                             setModalOnConfirm(() => async () => {
                                 try {
-                                    await deleteFamilyMember(
-                                        clientId,
-                                        member.id,
-                                    );
+                                    await deleteFamilyMember(clientId, member.id);
                                     handleDeleteFamilyMember(member.id);
                                     setShowModal(false);
                                 } catch (err) {
-                                    console.error(
-                                        "Failed to delete family member:",
-                                        err,
-                                    );
+                                    console.error("Failed to delete family member:", err);
                                 }
                             });
 
@@ -419,12 +365,13 @@ const FamilyCard = ({
                 </div>
             )}
         </div>
+
     );
 };
 
 export default FamilyCard;
 
-                            {/* <span data-cy={`disp-family-${key}-${index}`}>
+{/* <span data-cy={`disp-family-${key}-${index}`}>
                                 {key === "status" || key === "civilStatus"
                                     ? `: ${member[key] ? member[key][0].toUpperCase() + member[key].slice(1) : "-"}`
                                     : key === "age"

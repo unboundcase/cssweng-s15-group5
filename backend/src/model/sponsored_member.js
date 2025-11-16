@@ -134,6 +134,8 @@ const SponsoredMemberSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    }, {
+    timestamps: true
 });
 
 // Automatically assign intervention numbers before saving

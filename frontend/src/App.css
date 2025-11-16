@@ -1,10 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap');
 
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  /* text-align: center; */
+  padding: 1rem; /* Smaller padding for mobile */
 }
 
 .logo {
@@ -42,3 +41,35 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Small mobile and up */
+@media (min-width: 480px) {
+  #root {
+    padding: 2rem;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+  #root {
+    max-width: 1280px;
+    padding: 2rem;
+  }
+}
+
+/* Mobile menu styles - removed media query */
+/* All mobile behavior now handled by JavaScript state */
+  .menu-button {
+    display: block !important;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+  
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }

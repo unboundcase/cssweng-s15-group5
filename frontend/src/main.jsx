@@ -24,6 +24,9 @@ import NotFound from "./pages/not-found.jsx";
 import Loading from "./pages/loading.jsx";
 import Unauthorized from "./pages/unauthorized.jsx";
 
+import LocationStatistics from "./pages/statistics/LocationStatistics.jsx";
+
+
 
 //we need to add routes pa here for going to other pages so the actual routes are here we add the module Case to load that page
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -79,6 +82,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 <Route
                     path="/spu"
                     element={<SpuPage />}
+                />
+
+                <Route 
+                    path="/statistics" 
+                    element={<LocationStatistics />} 
                 />
 
                 {InterventionRoutes()}
